@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Procesamiento</title>
+
+  <style>
+    :root {
+      --primary: #3498db;
+      --secondary: #2ecc71;
+      --warning: #f39c12;
+      --danger: #e74c3c;
+      --dark: #2c3e50;
+      --light: #ecf0f1;
+      --gray: #95a5a6;
+    }
+    body { 
+      font-family: Arial; 
+      background:#f5f7fa; 
+      padding:20px; 
+    }
+
+    .dashboard { 
+      max-width:1100px; 
+      margin:auto; 
+    }
+
+    .header-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .date-filter {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    select {
+      padding: 8px 15px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      background-color: white;
+    }
+
+    .cards {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+      gap:15px;
+      margin-bottom:20px;
+    }
+
+    .card {
+      background:white;
+      padding:15px;
+      border-radius:10px;
+      box-shadow:0 3px 6px rgba(0,0,0,0.1);
+    }
+
+    .card h3 {
+      margin-bottom:10px;
+      font-size:18px;
+      color:var(--dark);
+    }
+
+    .value-big {
+      font-size:28px;
+      font-weight:bold;
+      color:var(--primary);
+      text-align:right;
+    }
+
+    .row {
+      display:flex;
+      justify-content:space-between;
+      font-size:16px;
+      padding:4px;
+      border-bottom:1px dashed #ddd;
+    }
+
+    .label { color:var(--gray); }
+    .value { font-weight:bold; }
+
+    #loading { text-align:center; margin-top:20px; color:#777; }
+    
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="dashboard">
+  <div class="header-controls">
+    <h1>Dashboard Secado Mecánico</h1>
+    <div class="controls">
+      <div class="date-filter">
+        <label for="date-select">Mostrar datos de:</label>
+        <select id="date-select">
+          <option value="latest">Fecha más reciente</option>
+        </select>
+      </div>
+      <button id="refresh-btn">Actualizar</button>
+    </div>
+  </div>
+  
+  <p id="fecha"></p>
+
+  <!-- 🚀 NUEVAS TARJETAS PRINCIPALES -->
+  <div class="cards">
+
+    <div class="card" style="border-left:5px solid var(--primary);">
+      <h3>Total QQs</h3>
+      <div class="value-big" id="total-qss"></div>
+    </div>
+
+    <div class="card" style="border-left:5px solid var(--secondary);">
+      <h3>QQ Pre-Seco</h3>
+      <div class="value-big" id="qq-preseco"></div>
+    </div>
+
+    <div class="card" style="border-left:5px solid var(--warning);">
+      <h3>QQ Mojado</h3>
+      <div class="value-big" id="qq-mojado"></div>
+    </div>
+
+  </div>
+
+  <!-- TARJETAS ANTERIORES -->
+  <div class="cards">
+    
+    <div class="card" style="border-left:5px solid var(--warning);">
+      <h3>Lotes en Cola</h3>
+      <div class="row"><span class="label">Secadoras:</span><span class="value" id="lotes-cola"></span></div>
+      <div class="row"><span class="label">QQ en Cola:</span><span class="value" id="qq-cola"></span></div>
+    </div>
+
+    <div class="card" style="border-left:5px solid var(--primary);">
+      <h3>Secadoras en Proceso</h3>
+      <div class="row"><span class="label">Secadoras:</span><span class="value" id="sec-proceso"></span></div>
+      <div class="row"><span class="label">QQ Proceso:</span><span class="value" id="qq-proceso"></span></div>
+    </div>
+
+    <div class="card" style="border-left:5px solid var(--danger);">
+      <h3>Secadoras Pendientes</h3>
+      <div class="row"><span class="label">Secadoras:</span><span class="value" id="sec-pendientes"></span></div>
+      <div class="row"><span class="label">QQ Pendientes:</span><span class="value" id="qq-pendientes"></span></div>
+    </div>
+
+    <div class="card" style="border-left:5px solid var(--secondary);">
+      <h3>Secadoras Enviadas</h3>
+      <div class="row"><span class="label">Secadoras:</span><span class="value" id="sec-enviadas"></span></div>
+      <div class="row"><span class="label">QQ Enviados:</span><span class="value" id="qq-enviados"></span></div>
+    </div>
+
+  </div>
+
+  <div id="loading">Cargando datos...</div>
+
+</div>
+
+<script>
+const SPREADSHEET_ID = "1lFHQO8f33dK2W9tDbg0_74_0fddNU449ooAy-WuHdvg";
+const GID = "1945963055"; 
+const URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=${GID}`;
+
+// Variables globales
+let allData = [];
+let currentDate = 'latest';
+
+function csvToJson(csv) {
+  const lines = csv.trim().split(/\r?\n/);
+  const headers = lines[0].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g).map(h => h.replace(/"/g,"").trim());
+  const data = [];
+  for (let i=1;i<lines.length;i++) {
+    const cols = lines[i].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
+    if (!cols) continue;
+    const row = {};
+    headers.forEach((h,j)=> row[h] = (cols[j]||"").replace(/"/g,"").trim());
+    data.push(row);
+  }
+  return data;
+}
+
+function populateDateSelector(data) {
+  const dateSelect = document.getElementById('date-select');
+  
+  // Limpiar opciones existentes excepto la primera
+  while (dateSelect.children.length > 1) {
+    dateSelect.removeChild(dateSelect.lastChild);
+  }
+  
+  // Obtener fechas únicas de los datos
+  const dates = [...new Set(data.map(row => row.Fecha))].sort((a, b) => {
+    return new Date(b) - new Date(a); // Orden descendente (más reciente primero)
+  });
+  
+  // Agregar opciones al selector
+  dates.forEach(date => {
+    const option = document.createElement('option');
+    option.value = date;
+    
+    // Formatear fecha sin hora
+    try {
+      const dateObj = new Date(date);
+      if (!isNaN(dateObj.getTime())) {
+        option.textContent = dateObj.toLocaleDateString('es-ES');
+      } else {
+        option.textContent = date; // Mostrar el valor original si no se puede parsear
+      }
+    } catch (e) {
+      option.textContent = date; // Mostrar el valor original si hay error
+    }
+    
+    dateSelect.appendChild(option);
+  });
+}
+
+function updateDashboard(data, dateFilter = 'latest') {
+  let row;
+  
+  if (dateFilter === 'latest') {
+    // Encontrar la fila con la fecha más reciente
+    const latestDate = [...new Set(data.map(row => row.Fecha))].sort((a, b) => {
+      return new Date(b) - new Date(a);
+    })[0];
+    
+    row = data.find(item => item.Fecha === latestDate);
+    currentDate = latestDate;
+  } else {
+    row = data.find(item => item.Fecha === dateFilter);
+    currentDate = dateFilter;
+  }
+  
+  if (!row) {
+    document.getElementById("loading").innerText = "No hay datos para la fecha seleccionada";
+    return;
+  }
+
+  // Actualizar la fecha mostrada
+  let displayDate;
+  try {
+    const dateObj = new Date(currentDate);
+    if (!isNaN(dateObj.getTime())) {
+      displayDate = dateObj.toLocaleDateString('es-ES');
+    } else {
+      displayDate = currentDate;
+    }
+  } catch (e) {
+    displayDate = currentDate;
+  }
+  
+  document.getElementById("fecha").innerText = 
+    "Datos de: " + displayDate + 
+    " | Actualizado: " + new Date().toLocaleString();
+
+  // 🚀 NUEVAS TARJETAS PRINCIPALES - CORREGIDO
+  document.getElementById("total-qss").innerText = row["Total QQs"] || "0"; // Cambiado de "Total QSS" a "Total QQs"
+  document.getElementById("qq-preseco").innerText = row["qq pre-seco"] || "0";
+  document.getElementById("qq-mojado").innerText = row["qq mojado"] || "0";
+
+  // TARJETAS EXISTENTES
+  document.getElementById("lotes-cola").innerText = row["Lotes en cola"] || "0";
+  document.getElementById("qq-cola").innerText = row["QQ EN cola"] || "0";
+
+  document.getElementById("sec-proceso").innerText = row["Secadoras En proceso"] || "0";
+  document.getElementById("qq-proceso").innerText = row["QQ Proceso"] || "0";
+
+  document.getElementById("sec-pendientes").innerText = row["Secadoras Pendientes"] || "0";
+  document.getElementById("qq-pendientes").innerText = row["QQ pendientes"] || "0";
+
+  document.getElementById("sec-enviadas").innerText = row["Secadoras Enviadas"] || "0";
+  document.getElementById("qq-enviados").innerText = row["QQ Enviados"] || "0";
+
+  document.getElementById("loading").style.display = "none";
+}
+
+async function loadData() {
+  document.getElementById("loading").style.display = "block";
+  document.getElementById("loading").innerText = "Cargando datos...";
+
+  try {
+    const resp = await fetch(URL);
+    const csv = await resp.text();
+    allData = csvToJson(csv);
+    
+    // Verificar si existe la columna de fecha
+    if (!allData[0] || !allData[0].Fecha) {
+      throw new Error("No se encontró la columna 'Fecha' en los datos");
+    }
+    
+    populateDateSelector(allData);
+    updateDashboard(allData, currentDate);
+
+  } catch (e) {
+    document.getElementById("loading").innerText = "Error al cargar datos: " + e.message;
+    console.error(e);
+  }
+}
+
+// Event Listeners
+document.getElementById('refresh-btn').addEventListener('click', loadData);
+document.getElementById('date-select').addEventListener('change', function() {
+  updateDashboard(allData, this.value);
+});
+
+// Cargar datos inicialmente
+loadData();
+</script>
+</body>
+</html>

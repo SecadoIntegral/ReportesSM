@@ -108,10 +108,6 @@
     .value { font-weight:bold; }
 
     #loading { text-align:center; margin-top:20px; color:#777; }
-    
-    .hidden {
-      display: none;
-    }
   </style>
 </head>
 <body>
@@ -123,7 +119,7 @@
       <div class="date-filter">
         <label for="date-select">Mostrar datos de:</label>
         <select id="date-select">
-          <option value="latest">Fecha más reciente</option>
+          <option value="latest">Última línea</option>
         </select>
       </div>
       <button id="refresh-btn">Actualizar</button>
@@ -152,14 +148,8 @@
 
   </div>
 
-  <!-- TARJETAS ANTERIORES -->
+  <!-- TARJETAS RESTANTES -->
   <div class="cards">
-    
-    <div class="card" style="border-left:5px solid var(--warning);">
-      <h3>Lotes en Cola</h3>
-      <div class="row"><span class="label">Secadoras:</span><span class="value" id="lotes-cola"></span></div>
-      <div class="row"><span class="label">QQ en Cola:</span><span class="value" id="qq-cola"></span></div>
-    </div>
 
     <div class="card" style="border-left:5px solid var(--primary);">
       <h3>Secadoras en Proceso</h3>
@@ -190,147 +180,140 @@ const SPREADSHEET_ID = "1lFHQO8f33dK2W9tDbg0_74_0fddNU449ooAy-WuHdvg";
 const GID = "1945963055"; 
 const URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=${GID}`;
 
-// Variables globales
 let allData = [];
-let currentDate = 'latest';
 
+// ==========================
+// 🔧 PARSEAR FECHA dd/mm/yyyy
+// ==========================
+function parseFecha(fechaStr) {
+  if (!fechaStr) return null;
+
+  // Si viene en yyyy-mm-dd
+  if (/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) {
+    return new Date(fechaStr);
+  }
+
+  // Si viene dd/mm/yyyy
+  const partes = fechaStr.split("/");
+  if (partes.length !== 3) return null;
+
+  const dia = parseInt(partes[0], 10);
+  const mes = parseInt(partes[1], 10) - 1;
+  const año = parseInt(partes[2], 10);
+
+  return new Date(año, mes, dia);
+}
+
+// ==========================
+// 🔢 FORMATO DE NÚMEROS DECIMALES
+// ==========================
+function fmt(num) {
+  return Number(num || 0).toFixed(2);
+}
+
+// ==========================
+// 📄 CSV → JSON
+// ==========================
 function csvToJson(csv) {
   const lines = csv.trim().split(/\r?\n/);
-  const headers = lines[0].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g).map(h => h.replace(/"/g,"").trim());
+  const headers = lines[0].split(",");
   const data = [];
-  for (let i=1;i<lines.length;i++) {
-    const cols = lines[i].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g);
-    if (!cols) continue;
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split(",");
     const row = {};
-    headers.forEach((h,j)=> row[h] = (cols[j]||"").replace(/"/g,"").trim());
+    headers.forEach((h, j) => row[h.trim()] = (cols[j] || "").trim());
     data.push(row);
   }
   return data;
 }
 
+// ==========================
+// 📅 LLENAR SELECTOR DE FECHAS
+// ==========================
 function populateDateSelector(data) {
-  const dateSelect = document.getElementById('date-select');
-  
-  // Limpiar opciones existentes excepto la primera
-  while (dateSelect.children.length > 1) {
-    dateSelect.removeChild(dateSelect.lastChild);
+  const dateSelect = document.getElementById("date-select");
+
+  // Mantener solo "latest"
+  while (dateSelect.options.length > 1) {
+    dateSelect.remove(1);
   }
-  
-  // Obtener fechas únicas de los datos
-  const dates = [...new Set(data.map(row => row.Fecha))].sort((a, b) => {
-    return new Date(b) - new Date(a); // Orden descendente (más reciente primero)
-  });
-  
-  // Agregar opciones al selector
+
+  const dates = [...new Set(data.map(r => r.Fecha))]
+    .filter(f => f && f !== "")
+    .sort((a, b) => parseFecha(b) - parseFecha(a));
+
   dates.forEach(date => {
-    const option = document.createElement('option');
+    const option = document.createElement("option");
+    const d = parseFecha(date);
     option.value = date;
-    
-    // Formatear fecha sin hora
-    try {
-      const dateObj = new Date(date);
-      if (!isNaN(dateObj.getTime())) {
-        option.textContent = dateObj.toLocaleDateString('es-ES');
-      } else {
-        option.textContent = date; // Mostrar el valor original si no se puede parsear
-      }
-    } catch (e) {
-      option.textContent = date; // Mostrar el valor original si hay error
-    }
-    
+    option.textContent = d ? d.toLocaleDateString("es-ES") : date;
     dateSelect.appendChild(option);
   });
 }
 
-function updateDashboard(data, dateFilter = 'latest') {
+// ==========================
+// 📊 ACTUALIZAR DASHBOARD
+// ==========================
+function updateDashboard(data, dateFilter = "latest") {
   let row;
-  
-  if (dateFilter === 'latest') {
-    // Encontrar la fila con la fecha más reciente
-    const latestDate = [...new Set(data.map(row => row.Fecha))].sort((a, b) => {
-      return new Date(b) - new Date(a);
-    })[0];
-    
-    row = data.find(item => item.Fecha === latestDate);
-    currentDate = latestDate;
+
+  if (dateFilter === "latest") {
+    row = data[data.length - 1];  // última línea real
   } else {
-    row = data.find(item => item.Fecha === dateFilter);
-    currentDate = dateFilter;
-  }
-  
-  if (!row) {
-    document.getElementById("loading").innerText = "No hay datos para la fecha seleccionada";
-    return;
+    row = data.find(r => r.Fecha === dateFilter);
   }
 
-  // Actualizar la fecha mostrada
-  let displayDate;
-  try {
-    const dateObj = new Date(currentDate);
-    if (!isNaN(dateObj.getTime())) {
-      displayDate = dateObj.toLocaleDateString('es-ES');
-    } else {
-      displayDate = currentDate;
-    }
-  } catch (e) {
-    displayDate = currentDate;
-  }
-  
-  document.getElementById("fecha").innerText = 
-    "Datos de: " + displayDate + 
+  if (!row) return;
+
+  // Mostrar fecha formateada
+  let f = parseFecha(row.Fecha);
+  let fechaMostrar = f ? f.toLocaleDateString("es-ES") : row.Fecha;
+
+  document.getElementById("fecha").innerText =
+    "Datos de: " + fechaMostrar +
     " | Actualizado: " + new Date().toLocaleString();
 
-  // 🚀 NUEVAS TARJETAS PRINCIPALES - CORREGIDO
-  document.getElementById("total-qss").innerText = row["Total QQs"] || "0"; // Cambiado de "Total QSS" a "Total QQs"
-  document.getElementById("qq-preseco").innerText = row["qq pre-seco"] || "0";
-  document.getElementById("qq-mojado").innerText = row["qq mojado"] || "0";
+  // Tarjetas principales
+  document.getElementById("total-qss").innerText = fmt(row["Total QQs"]);
+  document.getElementById("qq-preseco").innerText = fmt(row["qq pre-seco"]);
+  document.getElementById("qq-mojado").innerText = fmt(row["qq mojado"]);
 
-  // TARJETAS EXISTENTES
-  document.getElementById("lotes-cola").innerText = row["Lotes en cola"] || "0";
-  document.getElementById("qq-cola").innerText = row["QQ EN cola"] || "0";
+  // Tarjetas secundarias
+  document.getElementById("sec-proceso").innerText = fmt(row["Secadoras En proceso"]);
+  document.getElementById("qq-proceso").innerText = fmt(row["QQ Proceso"]);
 
-  document.getElementById("sec-proceso").innerText = row["Secadoras En proceso"] || "0";
-  document.getElementById("qq-proceso").innerText = row["QQ Proceso"] || "0";
+  document.getElementById("sec-pendientes").innerText = fmt(row["Secadoras Pendientes"]);
+  document.getElementById("qq-pendientes").innerText = fmt(row["QQ pendientes"]);
 
-  document.getElementById("sec-pendientes").innerText = row["Secadoras Pendientes"] || "0";
-  document.getElementById("qq-pendientes").innerText = row["QQ pendientes"] || "0";
-
-  document.getElementById("sec-enviadas").innerText = row["Secadoras Enviadas"] || "0";
-  document.getElementById("qq-enviados").innerText = row["QQ Enviados"] || "0";
+  document.getElementById("sec-enviadas").innerText = fmt(row["Secadoras Enviadas"]);
+  document.getElementById("qq-enviados").innerText = fmt(row["QQ Enviados"]);
 
   document.getElementById("loading").style.display = "none";
 }
 
+// ==========================
+// 🔄 CARGAR DATOS
+// ==========================
 async function loadData() {
   document.getElementById("loading").style.display = "block";
-  document.getElementById("loading").innerText = "Cargando datos...";
+  
+  const resp = await fetch(URL);
+  const csv = await resp.text();
+  allData = csvToJson(csv);
 
-  try {
-    const resp = await fetch(URL);
-    const csv = await resp.text();
-    allData = csvToJson(csv);
-    
-    // Verificar si existe la columna de fecha
-    if (!allData[0] || !allData[0].Fecha) {
-      throw new Error("No se encontró la columna 'Fecha' en los datos");
-    }
-    
-    populateDateSelector(allData);
-    updateDashboard(allData, currentDate);
+  populateDateSelector(allData);
 
-  } catch (e) {
-    document.getElementById("loading").innerText = "Error al cargar datos: " + e.message;
-    console.error(e);
-  }
+  const selected = document.getElementById("date-select").value;
+  updateDashboard(allData, selected);
 }
 
-// Event Listeners
-document.getElementById('refresh-btn').addEventListener('click', loadData);
-document.getElementById('date-select').addEventListener('change', function() {
+// EVENTOS
+document.getElementById("refresh-btn").addEventListener("click", loadData);
+document.getElementById("date-select").addEventListener("change", function () {
   updateDashboard(allData, this.value);
 });
 
-// Cargar datos inicialmente
+// Ejecutar al iniciar
 loadData();
 </script>
 </body>

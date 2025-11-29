@@ -18,7 +18,8 @@
     body { 
       font-family: Arial; 
       background:#f5f7fa; 
-      padding:20px; 
+      padding:15px; 
+      margin: 0;
     }
 
     .dashboard { 
@@ -39,12 +40,14 @@
       display: flex;
       gap: 15px;
       align-items: center;
+      flex-wrap: wrap;
     }
 
     .date-filter {
       display: flex;
       gap: 10px;
       align-items: center;
+      flex-wrap: wrap;
     }
 
     button {
@@ -56,6 +59,7 @@
       cursor: pointer;
       font-weight: bold;
       transition: background-color 0.3s;
+      min-width: 100px;
     }
 
     button:hover {
@@ -67,6 +71,7 @@
       border-radius: 5px;
       border: 1px solid #ddd;
       background-color: white;
+      min-width: 150px;
     }
 
     .cards {
@@ -108,6 +113,188 @@
     .value { font-weight:bold; }
 
     #loading { text-align:center; margin-top:20px; color:#777; }
+
+    /* Estilos para el segundo dashboard */
+    .top-right {
+      position: static;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .date-select {
+      padding: 8px 12px;
+      border: 1px solid var(--gray);
+      border-radius: 5px;
+      background: white;
+      cursor: pointer;
+      min-width: 150px;
+    }
+
+    .table-container { 
+      background: white; 
+      border-radius: 8px; 
+      padding: 15px; 
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+      margin-bottom: 25px; 
+      overflow-x: auto; 
+    }
+
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      min-width: 500px; 
+    }
+    th, td { 
+      padding: 10px 12px; 
+      text-align: left; 
+      border-bottom: 1px solid #eee; 
+    }
+    th { 
+      background-color: #f8f9fa; 
+      color: var(--dark); 
+      font-weight: 600; 
+    }
+    tr:hover { 
+      background-color: #f8f9fa; 
+    }
+
+    .status-badge { 
+      padding: 4px 8px; 
+      border-radius: 15px; 
+      font-size: 11px; 
+      font-weight: 600; 
+      display: inline-block; 
+    }
+    .status-badge.success { 
+      background-color: rgba(46, 204, 113, 0.2); 
+      color: var(--secondary); 
+    }
+    .status-badge.warning { 
+      background-color: rgba(243, 156, 18, 0.2); 
+      color: var(--warning); 
+    }
+    .status-badge.danger { 
+      background-color: rgba(231, 76, 60, 0.2); 
+      color: var(--danger); 
+    }
+
+    .kpi-container { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
+      gap: 15px; 
+    }
+    .kpi-card { 
+      background: white; 
+      border-radius: 8px; 
+      padding: 15px; 
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+      text-align: center; 
+    }
+    .kpi-value { 
+      font-size: 24px; 
+      font-weight: bold; 
+      margin: 8px 0; 
+    }
+    .kpi-label { 
+      font-size: 12px; 
+      color: var(--gray); 
+    }
+
+    .loading { 
+      color: var(--gray); 
+      text-align: center; 
+      padding: 20px; 
+    }
+    .error { 
+      color: var(--danger); 
+      text-align: center; 
+      padding: 20px; 
+    }
+
+    /* Media queries para dispositivos móviles */
+    @media (max-width: 768px) {
+      body {
+        padding: 10px;
+      }
+      
+      .header-controls {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .controls {
+        width: 100%;
+        justify-content: space-between;
+      }
+      
+      .date-filter {
+        width: 100%;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+      
+      .cards {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      
+      .card {
+        padding: 12px;
+      }
+      
+      .value-big {
+        font-size: 24px;
+      }
+      
+      .kpi-container {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .kpi-card {
+        padding: 12px;
+      }
+      
+      .kpi-value {
+        font-size: 20px;
+      }
+      
+      button, select {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+      
+      .table-container {
+        padding: 10px;
+      }
+      
+      th, td {
+        padding: 8px 10px;
+        font-size: 14px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .kpi-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .header-controls h1 {
+        font-size: 24px;
+      }
+      
+      .card h3 {
+        font-size: 16px;
+      }
+      
+      .value-big {
+        font-size: 22px;
+      }
+      
+      .row {
+        font-size: 14px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -175,6 +362,55 @@
 
 </div>
 
+<!-- Segundo Dashboard -->
+<div class="dashboard">
+  <!-- BOTÓN / SELECTOR DE FECHAS -->
+  <div class="top-right">
+    <select id="dateSelector" class="date-select">
+      <option value="">Cargando...</option>
+    </select>
+  </div>
+
+  <!-- TABLA -->
+  <div class="table-container">
+    <h2>Métricas de Proceso</h2>
+    <div id="loading-message" class="loading">Cargando datos...</div>
+    <table style="display: none;">
+      <thead>
+        <tr>
+          <th>Métrica</th>
+          <th>Valor</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-body"></tbody>
+    </table>
+  </div>
+
+  <!-- TARJETAS KPI -->
+  <div class="kpi-container">
+    <div class="kpi-card">
+      <div id="kpi-disponibilidad" class="kpi-value" style="color: var(--warning);">--%</div>
+      <div class="kpi-label">Disponibilidad</div>
+    </div>
+
+    <div class="kpi-card">
+      <div id="kpi-desempeno" class="kpi-value" style="color: var(--danger);">--%</div>
+      <div class="kpi-label">Desempeño</div>
+    </div>
+
+    <div class="kpi-card">
+      <div id="kpi-calidad" class="kpi-value" style="color: var(--secondary);">--%</div>
+      <div class="kpi-label">Calidad</div>
+    </div>
+
+    <div class="kpi-card">
+      <div id="kpi-oee" class="kpi-value" style="color: var(--danger);">--%</div>
+      <div class="kpi-label">OEE</div>
+    </div>
+  </div>
+</div>
+
 <script>
 const SPREADSHEET_ID = "1lFHQO8f33dK2W9tDbg0_74_0fddNU449ooAy-WuHdvg";
 const GID = "1945963055"; 
@@ -205,10 +441,16 @@ function parseFecha(fechaStr) {
 }
 
 // ==========================
-// 🔢 FORMATO DE NÚMEROS DECIMALES
+// 🔢 FORMATO DE NÚMEROS - MODIFICADO
 // ==========================
-function fmt(num) {
-  return Number(num || 0).toFixed(2);
+function fmt(num, isSecadoras = false) {
+  if (isSecadoras) {
+    // Para secadoras: sin decimales
+    return Math.round(Number(num || 0)).toString();
+  } else {
+    // Para QQ: con 2 decimales
+    return Number(num || 0).toFixed(2);
+  }
 }
 
 // ==========================
@@ -252,7 +494,7 @@ function populateDateSelector(data) {
 }
 
 // ==========================
-// 📊 ACTUALIZAR DASHBOARD
+// 📊 ACTUALIZAR DASHBOARD - MODIFICADO
 // ==========================
 function updateDashboard(data, dateFilter = "latest") {
   let row;
@@ -273,19 +515,20 @@ function updateDashboard(data, dateFilter = "latest") {
     "Datos de: " + fechaMostrar +
     " | Actualizado: " + new Date().toLocaleString();
 
-  // Tarjetas principales
+  // Tarjetas principales (QQ - con decimales)
   document.getElementById("total-qss").innerText = fmt(row["Total QQs"]);
   document.getElementById("qq-preseco").innerText = fmt(row["qq pre-seco"]);
   document.getElementById("qq-mojado").innerText = fmt(row["qq mojado"]);
 
   // Tarjetas secundarias
-  document.getElementById("sec-proceso").innerText = fmt(row["Secadoras En proceso"]);
-  document.getElementById("qq-proceso").innerText = fmt(row["QQ Proceso"]);
+  // Secadoras: sin decimales (segundo parámetro = true)
+  document.getElementById("sec-proceso").innerText = fmt(row["Secadoras En proceso"], true);
+  document.getElementById("qq-proceso").innerText = fmt(row["QQ Proceso"]); // QQ: con decimales
 
-  document.getElementById("sec-pendientes").innerText = fmt(row["Secadoras Pendientes"]);
+  document.getElementById("sec-pendientes").innerText = fmt(row["Secadoras Pendientes"], true);
   document.getElementById("qq-pendientes").innerText = fmt(row["QQ pendientes"]);
 
-  document.getElementById("sec-enviadas").innerText = fmt(row["Secadoras Enviadas"]);
+  document.getElementById("sec-enviadas").innerText = fmt(row["Secadoras Enviadas"], true);
   document.getElementById("qq-enviados").innerText = fmt(row["QQ Enviados"]);
 
   document.getElementById("loading").style.display = "none";
@@ -297,7 +540,8 @@ function updateDashboard(data, dateFilter = "latest") {
 async function loadData() {
   document.getElementById("loading").style.display = "block";
   
-  const resp = await fetch(URL);
+  const resp = await fetch(URL + "&cachebust=" + Date.now());
+
   const csv = await resp.text();
   allData = csvToJson(csv);
 
@@ -315,6 +559,221 @@ document.getElementById("date-select").addEventListener("change", function () {
 
 // Ejecutar al iniciar
 loadData();
+</script>
+
+<script>
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR38uKjMSWxeJhhRHl2Up9EA3BnrQgq7ERItdJBbM4BlHDX9JNFS9afc1jvgqmONMKz_U0Tw-IiDxJ-/pub?gid=1542097113&single=true&output=csv";
+
+let allRows = [];
+
+document.addEventListener("DOMContentLoaded", loadData);
+
+async function loadData() {
+    try {
+        console.log("Iniciando carga de datos...");
+        const response = await fetch(CSV_URL);
+        
+        if (!response.ok) {
+            throw new Error(`Error HTTP: ${response.status}`);
+        }
+        
+        const text = await response.text();
+        console.log("Datos CSV crudos:", text);
+        
+        // Procesar CSV considerando que puede tener comillas
+        const rows = parseCSV(text);
+        console.log("Filas procesadas:", rows);
+        
+        if (rows.length < 2) {
+            throw new Error("No hay suficientes datos en el CSV");
+        }
+        
+        // La primera fila son headers, los datos empiezan desde la segunda
+        allRows = rows.slice(1);
+        console.log("Datos filtrados:", allRows);
+        
+        // Mostrar información de columnas para debugging
+        if (allRows.length > 0) {
+            console.log("Primera fila de datos:", allRows[0]);
+            console.log("Número de columnas:", allRows[0].length);
+        }
+        
+        hideLoading();
+        fillDateSelector();
+        loadLatestDate();
+        
+    } catch (error) {
+        console.error("Error cargando datos:", error);
+        showError("Error cargando datos: " + error.message);
+    }
+}
+
+// Función mejorada para parsear CSV
+function parseCSV(text) {
+    const lines = text.split('\n').filter(line => line.trim() !== '');
+    return lines.map(line => {
+        const result = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                result.push(current.trim());
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        
+        result.push(current.trim());
+        return result;
+    });
+}
+
+function hideLoading() {
+    document.getElementById('loading-message').style.display = 'none';
+    document.querySelector('.table-container table').style.display = 'table';
+}
+
+function showError(message) {
+    document.getElementById('loading-message').className = 'error';
+    document.getElementById('loading-message').textContent = message;
+}
+
+function cleanDate(str) {
+    if (!str) return "";
+    return str
+        .replace(/\r/g, "")
+        .replace(/\n/g, "")
+        .replace(/\s+/g, "")
+        .replace(/"/g, "") // Remover comillas
+        .trim();
+}
+
+function fillDateSelector() {
+    const selector = document.getElementById("dateSelector");
+    selector.innerHTML = "";
+
+    // Buscar la columna que contiene fechas
+    let fechaIndex = -1;
+    if (allRows.length > 0) {
+        // Intentar encontrar la columna de fecha (última columna)
+        const lastRow = allRows[0];
+        fechaIndex = lastRow.length - 1; // Última columna
+        
+        console.log("Buscando fechas en columna:", fechaIndex);
+    }
+
+    let fechas = allRows
+        .map(r => {
+            const fecha = r[fechaIndex] || r[r.length - 1]; // Última columna
+            return cleanDate(fecha);
+        })
+        .filter(f => f && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(f));
+
+    console.log("Fechas encontradas:", fechas);
+
+    if (fechas.length === 0) {
+        // Si no encontramos fechas, mostrar todas las filas disponibles
+        fechas = allRows.map((_, index) => `Fila ${index + 1}`);
+    }
+
+    // ELIMINAR DUPLICADOS
+    fechas = [...new Set(fechas)];
+
+    // ORDENAR FECHAS si son fechas reales
+    if (fechas[0] && fechas[0].includes('/')) {
+        fechas.sort((a, b) => {
+            const [da, ma, ya] = a.split("/").map(Number);
+            const [db, mb, yb] = b.split("/").map(Number);
+            return new Date(yb, mb - 1, db) - new Date(ya, ma - 1, da);
+        });
+    }
+
+    // AGREGAR AL SELECT
+    fechas.forEach(fecha => {
+        const option = document.createElement("option");
+        option.value = fecha;
+        option.textContent = fecha;
+        selector.appendChild(option);
+    });
+
+    selector.addEventListener("change", () => {
+        loadByDate(selector.value);
+    });
+}
+
+function loadLatestDate() {
+    const selector = document.getElementById("dateSelector");
+    if (selector.options.length === 0) {
+        console.warn("No hay fechas disponibles");
+        return;
+    }
+    const primera = selector.options[0].value;
+    selector.value = primera;
+    loadByDate(primera);
+}
+
+function loadByDate(fecha) {
+    console.log("Buscando fecha:", fecha);
+    
+    let row;
+    
+    if (fecha.startsWith('Fila ')) {
+        // Si estamos usando índices de fila
+        const index = parseInt(fecha.replace('Fila ', '')) - 1;
+        row = allRows[index];
+    } else {
+        // Buscar por fecha en la última columna
+        row = allRows.find(r => {
+            const rowFecha = cleanDate(r[r.length - 1]);
+            return rowFecha === fecha;
+        });
+    }
+    
+    if (!row) {
+        console.warn("No se encontró data para:", fecha);
+        // Mostrar la primera fila disponible
+        row = allRows[0];
+    }
+
+    console.log("Fila encontrada:", row);
+
+    // Asignar valores - ajusta estos índices según tu estructura real
+    const [
+        turnos = '',
+        parosProg = '',
+        parosNoProg = '',
+        tiempoTotal = '',
+        tiempoMuerto = '',
+        procesados = '',
+        rechazados = '',
+        disponibilidad = '',
+        desempeno = '',
+        calidad = '',
+        oee = '',
+        fechaRow = ''
+    ] = row;
+
+    document.getElementById("tabla-body").innerHTML = `
+        <tr><td>Turnos</td><td>${turnos || 'N/A'}</td><td><span class="status-badge warning">Normal</span></td></tr>
+        <tr><td>Paros Programados</td><td>${parosProg || 'N/A'}</td><td><span class="status-badge warning">Planificado</span></td></tr>
+        <tr><td>Paros No Programados</td><td>${parosNoProg || 'N/A'}</td><td><span class="status-badge danger">Crítico</span></td></tr>
+        <tr><td>Tiempo Total</td><td>${tiempoTotal || 'N/A'}</td><td><span class="status-badge warning">Normal</span></td></tr>
+        <tr><td>Tiempo Muerto</td><td>${tiempoMuerto || 'N/A'}</td><td><span class="status-badge success">Excelente</span></td></tr>
+        <tr><td>Procesados</td><td>${procesados || 'N/A'}</td><td><span class="status-badge warning">Normal</span></td></tr>
+        <tr><td>Rechazados</td><td>${rechazados || 'N/A'}</td><td><span class="status-badge success">Excelente</span></td></tr>
+    `;
+
+    document.getElementById("kpi-disponibilidad").textContent = disponibilidad || '--%';
+    document.getElementById("kpi-desempeno").textContent = desempeno || '--%';
+    document.getElementById("kpi-calidad").textContent = calidad || '--%';
+    document.getElementById("kpi-oee").textContent = oee || '--%';
+}
 </script>
 </body>
 </html>

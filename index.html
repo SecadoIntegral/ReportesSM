@@ -581,7 +581,6 @@ async function loadData() {
         const text = await response.text();
         console.log("Datos CSV crudos:", text);
         
-        // Procesar CSV considerando que puede tener comillas
         const rows = parseCSV(text);
         console.log("Filas procesadas:", rows);
         
@@ -589,15 +588,7 @@ async function loadData() {
             throw new Error("No hay suficientes datos en el CSV");
         }
         
-        // La primera fila son headers, los datos empiezan desde la segunda
         allRows = rows.slice(1);
-        console.log("Datos filtrados:", allRows);
-        
-        // Mostrar información de columnas para debugging
-        if (allRows.length > 0) {
-            console.log("Primera fila de datos:", allRows[0]);
-            console.log("Número de columnas:", allRows[0].length);
-        }
         
         hideLoading();
         fillDateSelector();
@@ -609,7 +600,10 @@ async function loadData() {
     }
 }
 
-// Función mejorada para parsear CSV
+
+// --------------------------------------------------
+// PARSEAR CSV
+// --------------------------------------------------
 function parseCSV(text) {
     const lines = text.split('\n').filter(line => line.trim() !== '');
     return lines.map(line => {
@@ -651,51 +645,101 @@ function cleanDate(str) {
         .replace(/\r/g, "")
         .replace(/\n/g, "")
         .replace(/\s+/g, "")
-        .replace(/"/g, "") // Remover comillas
+        .replace(/"/g, "")
         .trim();
 }
 
+
+// --------------------------------------------------
+// FORMATO DE PORCENTAJE
+// --------------------------------------------------
+function formatPercent(valor) {
+    if (!valor) return "--%";
+
+    valor = valor.toString().replace("%", "");
+    let num = parseFloat(valor);
+
+    if (isNaN(num)) return "--%";
+    if (num <= 1) num = num * 100;
+
+    return num.toFixed(2) + "%";
+}
+
+
+// --------------------------------------------------
+// FORMATO DE HORAS HH:MM:SS
+// --------------------------------------------------
+function formatHoras(valor) {
+    if (!valor) return "00:00:00";
+    
+    valor = valor.toString().trim();
+
+    // Si ya viene en formato hh:mm:ss
+    if (/^\d{1,2}:\d{2}:\d{2}$/.test(valor)) {
+        return valor;
+    }
+
+    // Si viene como hh:mm
+    if (/^\d{1,2}:\d{1,2}$/.test(valor)) {
+        let [h, m] = valor.split(":").map(n => parseInt(n));
+        return (
+            String(h).padStart(2,"0") + ":" +
+            String(m).padStart(2,"0") + ":00"
+        );
+    }
+
+    // Reemplazar coma por punto (7,5 → 7.5)
+    valor = valor.replace(",", ".");
+
+    // Si viene "7 h 30"
+    if (/^\d+\s*h\s*\d+$/i.test(valor)) {
+        const parts = valor.split("h");
+        let h = parseInt(parts[0]);
+        let m = parseInt(parts[1]);
+        return (
+            String(h).padStart(2,"0") + ":" +
+            String(m).padStart(2,"0") + ":00"
+        );
+    }
+
+    // Convertir números que pueden ser horas decimales (7.5 = 7h 30min)
+    let num = parseFloat(valor);
+    if (!isNaN(num)) {
+        let hours = Math.floor(num);
+        let minutes = Math.round((num - hours) * 60);
+        return (
+            String(hours).padStart(2,"0") + ":" +
+            String(minutes).padStart(2,"0") + ":00"
+        );
+    }
+
+    return "00:00:00";
+}
+// --------------------------------------------------
+// SELECTOR DE FECHAS
+// --------------------------------------------------
 function fillDateSelector() {
     const selector = document.getElementById("dateSelector");
     selector.innerHTML = "";
 
-    // Buscar la columna que contiene fechas
     let fechaIndex = -1;
     if (allRows.length > 0) {
-        // Intentar encontrar la columna de fecha (última columna)
         const lastRow = allRows[0];
-        fechaIndex = lastRow.length - 1; // Última columna
-        
-        console.log("Buscando fechas en columna:", fechaIndex);
+        fechaIndex = lastRow.length - 1;
     }
 
     let fechas = allRows
-        .map(r => {
-            const fecha = r[fechaIndex] || r[r.length - 1]; // Última columna
-            return cleanDate(fecha);
-        })
+        .map(r => cleanDate(r[fechaIndex] || r[r.length - 1]))
         .filter(f => f && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(f));
 
-    console.log("Fechas encontradas:", fechas);
-
-    if (fechas.length === 0) {
-        // Si no encontramos fechas, mostrar todas las filas disponibles
-        fechas = allRows.map((_, index) => `Fila ${index + 1}`);
-    }
-
-    // ELIMINAR DUPLICADOS
     fechas = [...new Set(fechas)];
 
-    // ORDENAR FECHAS si son fechas reales
-    if (fechas[0] && fechas[0].includes('/')) {
-        fechas.sort((a, b) => {
-            const [da, ma, ya] = a.split("/").map(Number);
-            const [db, mb, yb] = b.split("/").map(Number);
-            return new Date(yb, mb - 1, db) - new Date(ya, ma - 1, da);
-        });
-    }
+    fechas.sort((a, b) => {
+        const [da, ma, ya] = a.split("/").map(Number);
+        const [db, mb, yb] = b.split("/").map(Number);
+        return new Date(yb, mb - 1, db) - new Date(ya, ma - 1, da);
+    });
 
-    // AGREGAR AL SELECT
     fechas.forEach(fecha => {
         const option = document.createElement("option");
         option.value = fecha;
@@ -710,41 +754,22 @@ function fillDateSelector() {
 
 function loadLatestDate() {
     const selector = document.getElementById("dateSelector");
-    if (selector.options.length === 0) {
-        console.warn("No hay fechas disponibles");
-        return;
-    }
+    if (selector.options.length === 0) return;
+
     const primera = selector.options[0].value;
     selector.value = primera;
     loadByDate(primera);
 }
 
+
+// --------------------------------------------------
+// CARGAR DATOS SEGÚN LA FECHA
+// --------------------------------------------------
 function loadByDate(fecha) {
-    console.log("Buscando fecha:", fecha);
-    
-    let row;
-    
-    if (fecha.startsWith('Fila ')) {
-        // Si estamos usando índices de fila
-        const index = parseInt(fecha.replace('Fila ', '')) - 1;
-        row = allRows[index];
-    } else {
-        // Buscar por fecha en la última columna
-        row = allRows.find(r => {
-            const rowFecha = cleanDate(r[r.length - 1]);
-            return rowFecha === fecha;
-        });
-    }
-    
-    if (!row) {
-        console.warn("No se encontró data para:", fecha);
-        // Mostrar la primera fila disponible
-        row = allRows[0];
-    }
+    let row = allRows.find(r => cleanDate(r[r.length - 1]) === fecha);
 
-    console.log("Fila encontrada:", row);
+    if (!row) row = allRows[0];
 
-    // Asignar valores - ajusta estos índices según tu estructura real
     const [
         turnos = '',
         parosProg = '',
@@ -757,24 +782,28 @@ function loadByDate(fecha) {
         desempeno = '',
         calidad = '',
         oee = '',
-        fechaRow = ''
     ] = row;
 
+
+    // TABLA PRINCIPAL
     document.getElementById("tabla-body").innerHTML = `
-        <tr><td>Turnos</td><td>${turnos || 'N/A'}</td><td><span class="status-badge warning">Normal</span></td></tr>
-        <tr><td>Paros Programados</td><td>${parosProg || 'N/A'}</td><td><span class="status-badge warning">Planificado</span></td></tr>
-        <tr><td>Paros No Programados</td><td>${parosNoProg || 'N/A'}</td><td><span class="status-badge danger">Crítico</span></td></tr>
-        <tr><td>Tiempo Total</td><td>${tiempoTotal || 'N/A'}</td><td><span class="status-badge warning">Normal</span></td></tr>
-        <tr><td>Tiempo Muerto</td><td>${tiempoMuerto || 'N/A'}</td><td><span class="status-badge success">Excelente</span></td></tr>
+        <tr><td>Turnos</td><td>24 horas</td><td><span class="status-badge warning">Normal</span></td></tr>
+        <tr><td>Paros Programados</td><td>${formatHoras(parosProg)}</td><td><span class="status-badge warning">Planificado</span></td></tr>
+        <tr><td>Paros No Programados</td><td>${formatHoras(parosNoProg)}</td><td><span class="status-badge danger">Crítico</span></td></tr>
+        <tr><td>Tiempo Total</td><td>${formatHoras(tiempoTotal)}</td><td><span class="status-badge warning">Normal</span></td></tr>
+        <tr><td>Tiempo Muerto</td><td>${formatHoras(tiempoMuerto)}</td><td><span class="status-badge success">Excelente</span></td></tr>
         <tr><td>Procesados</td><td>${procesados || 'N/A'}</td><td><span class="status-badge warning">Normal</span></td></tr>
         <tr><td>Rechazados</td><td>${rechazados || 'N/A'}</td><td><span class="status-badge success">Excelente</span></td></tr>
     `;
 
-    document.getElementById("kpi-disponibilidad").textContent = disponibilidad || '--%';
-    document.getElementById("kpi-desempeno").textContent = desempeno || '--%';
-    document.getElementById("kpi-calidad").textContent = calidad || '--%';
-    document.getElementById("kpi-oee").textContent = oee || '--%';
+
+    // KPIs
+    document.getElementById("kpi-disponibilidad").textContent = formatPercent(disponibilidad);
+    document.getElementById("kpi-desempeno").textContent = formatPercent(desempeno);
+    document.getElementById("kpi-calidad").textContent = formatPercent(calidad);
+    document.getElementById("kpi-oee").textContent = formatPercent(oee);
 }
+
 </script>
 </body>
 </html>

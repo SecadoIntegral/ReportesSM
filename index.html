@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard - Procesamiento</title>
 
   <style>
@@ -178,11 +178,17 @@
       background-color: rgba(231, 76, 60, 0.2); 
       color: var(--danger); 
     }
+    .status-badge.info { 
+      background-color: rgba(52,152,219,0.12);
+      color: var(--primary);
+    }
 
     .kpi-container { 
       display: grid; 
       grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); 
       gap: 15px; 
+      margin-top: 18px;
+      margin-bottom: 10px;
     }
     .kpi-card { 
       background: white; 
@@ -199,6 +205,27 @@
     .kpi-label { 
       font-size: 12px; 
       color: var(--gray); 
+    }
+
+    /* tarjeta extra para ojado */
+    .kpi-extra {
+      margin-top: 12px;
+      background: white;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+    }
+    .kpi-extra .label{
+      color:var(--gray);
+      display:block;
+      font-size:13px;
+    }
+    .kpi-extra .value {
+      font-weight:bold;
+      font-size:18px;
+      margin-top:6px;
+      color:var(--dark);
     }
 
     .loading { 
@@ -364,17 +391,16 @@
 
 <!-- Segundo Dashboard -->
 
-
-  <!-- TABLA -->
-  <div class="table-container">
-    <h2>Métricas de Proceso</h2>
-    <div class="dashboard">
-  <!-- BOTÓN / SELECTOR DE FECHAS -->
-  <div class="top-right">
-    <select id="dateSelector" class="date-select">
-      <option value="">Cargando...</option>
-    </select>
-  </div>
+<!-- TABLA -->
+<div class="table-container">
+  <h2>Métricas de Proceso</h2>
+  <div class="dashboard">
+    <!-- BOTÓN / SELECTOR DE FECHAS -->
+    <div class="top-right">
+      <select id="dateSelector" class="date-select">
+        <option value="">Cargando...</option>
+      </select>
+    </div>
     <div id="loading-message" class="loading">Cargando datos...</div>
     <table style="display: none;">
       <thead>
@@ -386,83 +412,77 @@
       </thead>
       <tbody id="tabla-body"></tbody>
     </table>
-  </div>
 
-  <!-- TARJETAS KPI -->
-  <div class="kpi-container">
-    <div class="kpi-card">
-      <div id="kpi-disponibilidad" class="kpi-value" style="color: var(--warning);">--%</div>
-      <div class="kpi-label">Disponibilidad</div>
+    <!-- TARJETAS KPI -->
+     <!-- AQUÍ VA EL DATO NUEVO: QQs Mojado ingresados (debajo de KPIs) -->
+    <div id="kpi-extra" class="kpi-extra">
+      <span class="label">QQs Mojado ingresados</span>
+      <div class="value" id="kpi-qqs-mojado">--</div>
+    </div>
+    <div class="kpi-container">
+      <div class="kpi-card">
+        <div id="kpi-disponibilidad" class="kpi-value" style="color: var(--warning);">--%</div>
+        <div class="kpi-label">Disponibilidad</div>
+      </div>
+
+      <div class="kpi-card">
+        <div id="kpi-desempeno" class="kpi-value" style="color: var(--danger);">--%</div>
+        <div class="kpi-label">Desempeño</div>
+      </div>
+
+      <div class="kpi-card">
+        <div id="kpi-calidad" class="kpi-value" style="color: var(--secondary);">--%</div>
+        <div class="kpi-label">Calidad</div>
+      </div>
+
+      <div class="kpi-card">
+        <div id="kpi-oee" class="kpi-value" style="color: var(--danger);">--%</div>
+        <div class="kpi-label">OEE</div>
+      </div>
     </div>
 
-    <div class="kpi-card">
-      <div id="kpi-desempeno" class="kpi-value" style="color: var(--danger);">--%</div>
-      <div class="kpi-label">Desempeño</div>
-    </div>
+    
 
-    <div class="kpi-card">
-      <div id="kpi-calidad" class="kpi-value" style="color: var(--secondary);">--%</div>
-      <div class="kpi-label">Calidad</div>
-    </div>
-
-    <div class="kpi-card">
-      <div id="kpi-oee" class="kpi-value" style="color: var(--danger);">--%</div>
-      <div class="kpi-label">OEE</div>
-    </div>
   </div>
 </div>
 
 <script>
+/* --------------------
+   PRIMER SCRIPT (Dashboard principal desde GID 1945963055)
+   -------------------- */
 const SPREADSHEET_ID = "1lFHQO8f33dK2W9tDbg0_74_0fddNU449ooAy-WuHdvg";
-const GID = "1945963055"; 
+const GID = "1945963055";
 const URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=${GID}`;
 
 let allData = [];
 
-// ==========================
-// 🔧 PARSEAR FECHA dd/mm/yyyy
-// ==========================
+// Parse fecha robusto (dd/mm/yyyy o yyyy-mm-dd)
 function parseFecha(fechaStr) {
   if (!fechaStr) return null;
-
-  // Si viene en yyyy-mm-dd
-  if (/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) {
-    return new Date(fechaStr);
-  }
-
-  // Si viene dd/mm/yyyy
+  fechaStr = (''+fechaStr).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) return new Date(fechaStr);
   const partes = fechaStr.split("/");
   if (partes.length !== 3) return null;
-
   const dia = parseInt(partes[0], 10);
   const mes = parseInt(partes[1], 10) - 1;
   const año = parseInt(partes[2], 10);
-
   return new Date(año, mes, dia);
 }
 
-// ==========================
-// 🔢 FORMATO DE NÚMEROS - MODIFICADO
-// ==========================
 function fmt(num, isSecadoras = false) {
-  if (isSecadoras) {
-    // Para secadoras: sin decimales
-    return Math.round(Number(num || 0)).toString();
-  } else {
-    // Para QQ: con 2 decimales
-    return Number(num || 0).toFixed(2);
-  }
+  if (isSecadoras) return Math.round(Number(num || 0)).toString();
+  const n = Number((num || 0).toString().replace(",", "."));
+  return isNaN(n) ? "0.00" : n.toFixed(2);
 }
 
-// ==========================
-// 📄 CSV → JSON
-// ==========================
+// CSV to JSON simple (usa encabezados)
 function csvToJson(csv) {
   const lines = csv.trim().split(/\r?\n/);
-  const headers = lines[0].split(",");
+  if (lines.length === 0) return [];
+  const headers = splitCsvLine(lines[0]);
   const data = [];
   for (let i = 1; i < lines.length; i++) {
-    const cols = lines[i].split(",");
+    const cols = splitCsvLine(lines[i]);
     const row = {};
     headers.forEach((h, j) => row[h.trim()] = (cols[j] || "").trim());
     data.push(row);
@@ -470,16 +490,31 @@ function csvToJson(csv) {
   return data;
 }
 
-// ==========================
-// 📅 LLENAR SELECTOR DE FECHAS
-// ==========================
+// splitCsvLine soporta comillas
+function splitCsvLine(line) {
+  const result = [];
+  let cur = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      inQuotes = !inQuotes;
+      continue;
+    }
+    if (ch === "," && !inQuotes) {
+      result.push(cur);
+      cur = "";
+      continue;
+    }
+    cur += ch;
+  }
+  result.push(cur);
+  return result;
+}
+
 function populateDateSelector(data) {
   const dateSelect = document.getElementById("date-select");
-
-  // Mantener solo "latest"
-  while (dateSelect.options.length > 1) {
-    dateSelect.remove(1);
-  }
+  while (dateSelect.options.length > 1) dateSelect.remove(1);
 
   const dates = [...new Set(data.map(r => r.Fecha))]
     .filter(f => f && f !== "")
@@ -494,314 +529,248 @@ function populateDateSelector(data) {
   });
 }
 
-// ==========================
-// 📊 ACTUALIZAR DASHBOARD - MODIFICADO
-// ==========================
 function updateDashboard(data, dateFilter = "latest") {
   let row;
-
   if (dateFilter === "latest") {
-    row = data[data.length - 1];  // última línea real
+    row = data[data.length - 1];
   } else {
     row = data.find(r => r.Fecha === dateFilter);
   }
-
   if (!row) return;
 
-  // Mostrar fecha formateada
-  let f = parseFecha(row.Fecha);
-  let fechaMostrar = f ? f.toLocaleDateString("es-ES") : row.Fecha;
+  const f = parseFecha(row.Fecha);
+  const fechaMostrar = f ? f.toLocaleDateString("es-ES") : (row.Fecha || "");
 
   document.getElementById("fecha").innerText =
     "Datos de: " + fechaMostrar +
     " | Actualizado: " + new Date().toLocaleString();
 
-  // Tarjetas principales (QQ - con decimales)
-  document.getElementById("total-qss").innerText = fmt(row["Total QQs"]);
-  document.getElementById("qq-preseco").innerText = fmt(row["qq pre-seco"]);
-  document.getElementById("qq-mojado").innerText = fmt(row["qq mojado"]);
+  // Compatibilidad: si el CSV tiene "QQs Mojado ingresados" o "qq mojado" o "QQ Mojado"
+  const qqMojadoKey = ["QQs Mojado ingresados", "qq mojado", "QQ Mojado", "QQs Mojado"].find(k => k in row);
+  const totalQssKey = ["Total QQs", "Total Qss", "Total QQ"].find(k => k in row) || "Total QQs";
+  const qqPresecoKey = ["qq pre-seco", "QQ Pre-Seco", "QQ Preseco"].find(k => k in row) || "qq pre-seco";
 
-  // Tarjetas secundarias
-  // Secadoras: sin decimales (segundo parámetro = true)
+  document.getElementById("total-qss").innerText = fmt(row[totalQssKey]);
+  document.getElementById("qq-preseco").innerText = fmt(row[qqPresecoKey]);
+  document.getElementById("qq-mojado").innerText = fmt( qqMojadoKey ? row[qqMojadoKey] : (row["qq mojado"] || row["QQ Mojado"] || 0) );
+
   document.getElementById("sec-proceso").innerText = fmt(row["Secadoras En proceso"], true);
-  document.getElementById("qq-proceso").innerText = fmt(row["QQ Proceso"]); // QQ: con decimales
-
+  document.getElementById("qq-proceso").innerText = fmt(row["QQ Proceso"]);
   document.getElementById("sec-pendientes").innerText = fmt(row["Secadoras Pendientes"], true);
   document.getElementById("qq-pendientes").innerText = fmt(row["QQ pendientes"]);
-
   document.getElementById("sec-enviadas").innerText = fmt(row["Secadoras Enviadas"], true);
   document.getElementById("qq-enviados").innerText = fmt(row["QQ Enviados"]);
 
   document.getElementById("loading").style.display = "none";
 }
 
-// ==========================
-// 🔄 CARGAR DATOS
-// ==========================
 async function loadData() {
   document.getElementById("loading").style.display = "block";
-  
-  const resp = await fetch(URL + "&cachebust=" + Date.now());
-
-  const csv = await resp.text();
-  allData = csvToJson(csv);
-
-  populateDateSelector(allData);
-
-  const selected = document.getElementById("date-select").value;
-  updateDashboard(allData, selected);
+  try {
+    const resp = await fetch(URL + "&cachebust=" + Date.now());
+    const csv = await resp.text();
+    allData = csvToJson(csv);
+    populateDateSelector(allData);
+    const selected = document.getElementById("date-select").value;
+    updateDashboard(allData, selected);
+  } catch (err) {
+    console.error("Error cargando primer CSV:", err);
+    document.getElementById("loading").innerText = "Error cargando datos principales";
+  }
 }
 
-// EVENTOS
 document.getElementById("refresh-btn").addEventListener("click", loadData);
 document.getElementById("date-select").addEventListener("change", function () {
   updateDashboard(allData, this.value);
 });
 
-// Ejecutar al iniciar
 loadData();
-</script>
 
-<script>
+/* --------------------
+   SEGUNDO SCRIPT (Métricas / KPIs desde CSV_URL)
+   -------------------- */
+
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR38uKjMSWxeJhhRHl2Up9EA3BnrQgq7ERItdJBbM4BlHDX9JNFS9afc1jvgqmONMKz_U0Tw-IiDxJ-/pub?gid=1542097113&single=true&output=csv";
 
 let allRows = [];
 
-document.addEventListener("DOMContentLoaded", loadData);
+document.addEventListener("DOMContentLoaded", loadDataMetrics);
 
-async function loadData() {
-    try {
-        console.log("Iniciando carga de datos...");
-        const response = await fetch(CSV_URL);
-        
-        if (!response.ok) {
-            throw new Error(`Error HTTP: ${response.status}`);
-        }
-        
-        const text = await response.text();
-        console.log("Datos CSV crudos:", text);
-        
-        const rows = parseCSV(text);
-        console.log("Filas procesadas:", rows);
-        
-        if (rows.length < 2) {
-            throw new Error("No hay suficientes datos en el CSV");
-        }
-        
-        allRows = rows.slice(1);
-        
-        hideLoading();
-        fillDateSelector();
-        loadLatestDate();
-        
-    } catch (error) {
-        console.error("Error cargando datos:", error);
-        showError("Error cargando datos: " + error.message);
-    }
+async function loadDataMetrics() {
+  try {
+    console.log("Iniciando carga de datos métricas...");
+    const response = await fetch(CSV_URL);
+    if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+    const text = await response.text();
+    const rows = parseCSV(text);
+    if (rows.length < 2) throw new Error("No hay suficientes datos en el CSV");
+    allRows = rows.slice(1);
+    hideLoading();
+    fillDateSelector();
+    loadLatestDate();
+  } catch (error) {
+    console.error("Error cargando datos métricas:", error);
+    showError("Error cargando datos: " + error.message);
+  }
 }
 
-
-// --------------------------------------------------
-// PARSEAR CSV
-// --------------------------------------------------
 function parseCSV(text) {
-    const lines = text.split('\n').filter(line => line.trim() !== '');
-    return lines.map(line => {
-        const result = [];
-        let current = '';
-        let inQuotes = false;
-        
-        for (let i = 0; i < line.length; i++) {
-            const char = line[i];
-            
-            if (char === '"') {
-                inQuotes = !inQuotes;
-            } else if (char === ',' && !inQuotes) {
-                result.push(current.trim());
-                current = '';
-            } else {
-                current += char;
-            }
-        }
-        
+  const lines = text.split('\n').filter(line => line.trim() !== '');
+  return lines.map(line => {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+        continue;
+      } else if (char === ',' && !inQuotes) {
         result.push(current.trim());
-        return result;
-    });
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim());
+    return result;
+  });
 }
 
 function hideLoading() {
-    document.getElementById('loading-message').style.display = 'none';
-    document.querySelector('.table-container table').style.display = 'table';
+  document.getElementById('loading-message').style.display = 'none';
+  const tbl = document.querySelector('.table-container table');
+  if (tbl) tbl.style.display = 'table';
 }
 
 function showError(message) {
-    document.getElementById('loading-message').className = 'error';
-    document.getElementById('loading-message').textContent = message;
+  document.getElementById('loading-message').className = 'error';
+  document.getElementById('loading-message').textContent = message;
 }
 
 function cleanDate(str) {
-    if (!str) return "";
-    return str
-        .replace(/\r/g, "")
-        .replace(/\n/g, "")
-        .replace(/\s+/g, "")
-        .replace(/"/g, "")
-        .trim();
+  if (!str) return "";
+  return str
+      .replace(/\r/g, "")
+      .replace(/\n/g, "")
+      .replace(/\s+/g, " ")
+      .replace(/"/g, "")
+      .trim();
 }
 
-
-// --------------------------------------------------
-// FORMATO DE PORCENTAJE
-// --------------------------------------------------
 function formatPercent(valor) {
-    if (!valor) return "--%";
-
-    valor = valor.toString().replace("%", "");
-    let num = parseFloat(valor);
-
-    if (isNaN(num)) return "--%";
-    if (num <= 1) num = num * 100;
-
-    return num.toFixed(2) + "%";
+  if (!valor) return "--%";
+  valor = valor.toString().replace("%", "").trim();
+  let num = parseFloat(valor);
+  if (isNaN(num)) return "--%";
+  if (num <= 1) num = num * 100;
+  return num.toFixed(2) + "%";
 }
 
-
-// --------------------------------------------------
-// FORMATO DE HORAS HH:MM:SS
-// --------------------------------------------------
 function formatHoras(valor) {
-    if (!valor) return "00:00:00";
-    
-    valor = valor.toString().trim();
-
-    // Si ya viene en formato hh:mm:ss
-    if (/^\d{1,2}:\d{2}:\d{2}$/.test(valor)) {
-        return valor;
-    }
-
-    // Si viene como hh:mm
-    if (/^\d{1,2}:\d{1,2}$/.test(valor)) {
-        let [h, m] = valor.split(":").map(n => parseInt(n));
-        return (
-            String(h).padStart(2,"0") + ":" +
-            String(m).padStart(2,"0") + ":00"
-        );
-    }
-
-    // Reemplazar coma por punto (7,5 → 7.5)
-    valor = valor.replace(",", ".");
-
-    // Si viene "7 h 30"
-    if (/^\d+\s*h\s*\d+$/i.test(valor)) {
-        const parts = valor.split("h");
-        let h = parseInt(parts[0]);
-        let m = parseInt(parts[1]);
-        return (
-            String(h).padStart(2,"0") + ":" +
-            String(m).padStart(2,"0") + ":00"
-        );
-    }
-
-    // Convertir números que pueden ser horas decimales (7.5 = 7h 30min)
-    let num = parseFloat(valor);
-    if (!isNaN(num)) {
-        let hours = Math.floor(num);
-        let minutes = Math.round((num - hours) * 60);
-        return (
-            String(hours).padStart(2,"0") + ":" +
-            String(minutes).padStart(2,"0") + ":00"
-        );
-    }
-
-    return "00:00:00";
+  if (!valor) return "00:00:00";
+  valor = valor.toString().trim();
+  if (/^\d{1,2}:\d{2}:\d{2}$/.test(valor)) return valor;
+  if (/^\d{1,2}:\d{1,2}$/.test(valor)) {
+    let [h, m] = valor.split(":").map(n => parseInt(n));
+    return (String(h).padStart(2,"0") + ":" + String(m).padStart(2,"0") + ":00");
+  }
+  valor = valor.replace(",", ".");
+  if (/^\d+\s*h\s*\d+$/.test(valor)) {
+    const parts = valor.split("h");
+    let h = parseInt(parts[0]);
+    let m = parseInt(parts[1]);
+    return (String(h).padStart(2,"0") + ":" + String(m).padStart(2,"0") + ":00");
+  }
+  let num = parseFloat(valor);
+  if (!isNaN(num)) {
+    let hours = Math.floor(num);
+    let minutes = Math.round((num - hours) * 60);
+    return (String(hours).padStart(2,"0") + ":" + String(minutes).padStart(2,"0") + ":00");
+  }
+  return "00:00:00";
 }
-// --------------------------------------------------
-// SELECTOR DE FECHAS
-// --------------------------------------------------
+
 function fillDateSelector() {
-    const selector = document.getElementById("dateSelector");
-    selector.innerHTML = "";
+  const selector = document.getElementById("dateSelector");
+  selector.innerHTML = "";
 
-    let fechaIndex = -1;
-    if (allRows.length > 0) {
-        const lastRow = allRows[0];
-        fechaIndex = lastRow.length - 1;
-    }
+  if (allRows.length === 0) return;
+  const lastRow = allRows[0];
+  const fechaIndex = lastRow.length - 1;
 
-    let fechas = allRows
-        .map(r => cleanDate(r[fechaIndex] || r[r.length - 1]))
-        .filter(f => f && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(f));
+  let fechas = allRows
+      .map(r => cleanDate(r[fechaIndex] || r[r.length - 1]))
+      .filter(f => f && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(f));
 
-    fechas = [...new Set(fechas)];
+  fechas = [...new Set(fechas)];
 
-    fechas.sort((a, b) => {
-        const [da, ma, ya] = a.split("/").map(Number);
-        const [db, mb, yb] = b.split("/").map(Number);
-        return new Date(yb, mb - 1, db) - new Date(ya, ma - 1, da);
-    });
+  fechas.sort((a, b) => {
+      const [da, ma, ya] = a.split("/").map(Number);
+      const [db, mb, yb] = b.split("/").map(Number);
+      return new Date(yb, mb - 1, db) - new Date(ya, ma - 1, da);
+  });
 
-    fechas.forEach(fecha => {
-        const option = document.createElement("option");
-        option.value = fecha;
-        option.textContent = fecha;
-        selector.appendChild(option);
-    });
+  fechas.forEach(fecha => {
+      const option = document.createElement("option");
+      option.value = fecha;
+      option.textContent = fecha;
+      selector.appendChild(option);
+  });
 
-    selector.addEventListener("change", () => {
-        loadByDate(selector.value);
-    });
+  selector.addEventListener("change", () => {
+      loadByDate(selector.value);
+  });
 }
 
 function loadLatestDate() {
-    const selector = document.getElementById("dateSelector");
-    if (selector.options.length === 0) return;
-
-    const primera = selector.options[0].value;
-    selector.value = primera;
-    loadByDate(primera);
+  const selector = document.getElementById("dateSelector");
+  if (selector.options.length === 0) return;
+  const primera = selector.options[0].value;
+  selector.value = primera;
+  loadByDate(primera);
 }
 
-
-// --------------------------------------------------
-// CARGAR DATOS SEGÚN LA FECHA
-// --------------------------------------------------
 function loadByDate(fecha) {
-    let row = allRows.find(r => cleanDate(r[r.length - 1]) === fecha);
+  let row = allRows.find(r => cleanDate(r[r.length - 1]) === fecha);
+  if (!row) row = allRows[0];
 
-    if (!row) row = allRows[0];
+  // Ajustado a la nueva estructura (la columna F es QQs Mojado ingresados)
+  const [
+      turnos = '',
+      parosProg = '',
+      parosNoProg = '',
+      tiempoTotal = '',
+      tiempoMuerto = '',
+      qqsMojadoIngresados = '', // índice 5 -> NUEVO CAMPO
+      procesados = '',
+      rechazados = '',
+      disponibilidad = '',
+      desempeno = '',
+      calidad = '',
+      oee = '',
+  ] = row;
 
-    const [
-        turnos = '',
-        parosProg = '',
-        parosNoProg = '',
-        tiempoTotal = '',
-        tiempoMuerto = '',
-        procesados = '',
-        rechazados = '',
-        disponibilidad = '',
-        desempeno = '',
-        calidad = '',
-        oee = '',
-    ] = row;
+  // TABLA PRINCIPAL
+  document.getElementById("tabla-body").innerHTML = `
+      <tr><td>Turnos</td><td>24 horas</td><td><span class="status-badge warning">Normal</span></td></tr>
+      <tr><td>Paros Programados</td><td>${formatHoras(parosProg)}</td><td><span class="status-badge warning">Planificado</span></td></tr>
+      <tr><td>Paros No Programados</td><td>${formatHoras(parosNoProg)}</td><td><span class="status-badge danger">Crítico</span></td></tr>
+      <tr><td>Tiempo Total</td><td>${formatHoras(tiempoTotal)}</td><td><span class="status-badge warning">Normal</span></td></tr>
+      <tr><td>Tiempo Muerto</td><td>${formatHoras(tiempoMuerto)}</td><td><span class="status-badge success">Excelente</span></td></tr>
+      <tr><td>QQs Mojado ingresados</td><td>${qqsMojadoIngresados || '0'}</td><td><span class="status-badge info">Nuevo</span></td></tr>
+      <tr><td>Procesados</td><td>${procesados || 'N/A'}</td><td><span class="status-badge warning">Normal</span></td></tr>
+      <tr><td>Rechazados</td><td>${rechazados || 'N/A'}</td><td><span class="status-badge success">Excelente</span></td></tr>
+  `;
 
+  // KPIs (tarjetas grandes)
+  document.getElementById("kpi-disponibilidad").textContent = formatPercent(disponibilidad);
+  document.getElementById("kpi-desempeno").textContent = formatPercent(desempeno);
+  document.getElementById("kpi-calidad").textContent = formatPercent(calidad);
+  document.getElementById("kpi-oee").textContent = formatPercent(oee);
 
-    // TABLA PRINCIPAL
-    document.getElementById("tabla-body").innerHTML = `
-        <tr><td>Turnos</td><td>24 horas</td><td><span class="status-badge warning">Normal</span></td></tr>
-        <tr><td>Paros Programados</td><td>${formatHoras(parosProg)}</td><td><span class="status-badge warning">Planificado</span></td></tr>
-        <tr><td>Paros No Programados</td><td>${formatHoras(parosNoProg)}</td><td><span class="status-badge danger">Crítico</span></td></tr>
-        <tr><td>Tiempo Total</td><td>${formatHoras(tiempoTotal)}</td><td><span class="status-badge warning">Normal</span></td></tr>
-        <tr><td>Tiempo Muerto</td><td>${formatHoras(tiempoMuerto)}</td><td><span class="status-badge success">Excelente</span></td></tr>
-        <tr><td>Procesados</td><td>${procesados || 'N/A'}</td><td><span class="status-badge warning">Normal</span></td></tr>
-        <tr><td>Rechazados</td><td>${rechazados || 'N/A'}</td><td><span class="status-badge success">Excelente</span></td></tr>
-    `;
-
-
-    // KPIs
-    document.getElementById("kpi-disponibilidad").textContent = formatPercent(disponibilidad);
-    document.getElementById("kpi-desempeno").textContent = formatPercent(desempeno);
-    document.getElementById("kpi-calidad").textContent = formatPercent(calidad);
-    document.getElementById("kpi-oee").textContent = formatPercent(oee);
+  // AQUÍ colocamos QQs Mojado ingresados debajo de KPIs
+  document.getElementById("kpi-qqs-mojado").textContent = qqsMojadoIngresados || '0';
 }
 
 </script>

@@ -83,7 +83,13 @@ function populateDateSelector(data) {
 function updateDashboard(data, dateFilter = "latest") {
   let row;
   if (dateFilter === "latest") {
+    // Siempre usar la última fila (más reciente)
     row = data[data.length - 1];
+    // También actualizar el selector para que muestre la más reciente
+    const dateSelect = document.getElementById("date-select");
+    if (dateSelect) {
+      dateSelect.value = "latest";
+    }
   } else {
     row = data.find(r => r.Fecha === dateFilter);
   }
@@ -122,8 +128,8 @@ async function loadData() {
     const csv = await resp.text();
     allData = csvToJson(csv);
     populateDateSelector(allData);
-    const selected = document.getElementById("date-select").value;
-    updateDashboard(allData, selected);
+    // Siempre cargar la fecha más reciente
+    updateDashboard(allData, "latest");
   } catch (err) {
     console.error("Error cargando primer CSV:", err);
     document.getElementById("loading").innerText = "Error cargando datos principales";
@@ -160,7 +166,7 @@ document.getElementById("date-select").addEventListener("change", function () {
   updateDashboard(allData, this.value);
 });
 
-// Cargar datos iniciales
+// Cargar datos iniciales - SIEMPRE con la fecha más reciente
 loadData();
 
 /* --------------------
@@ -214,6 +220,7 @@ async function loadDataMetrics() {
     fillDateSelector();
     
     if (allRows.length > 0) {
+      // SIEMPRE cargar la fecha más reciente automáticamente
       loadLatestDate();
     } else {
       showError("No se encontraron datos en el CSV");
@@ -336,7 +343,6 @@ function fillDateSelector() {
   }
   
   // BUSCAR LA COLUMNA DE FECHA CORRECTAMENTE
-  // Primero, buscar encabezados que contengan "fecha"
   let fechaIndex = -1;
   
   // Buscar por nombre común de columna fecha
@@ -361,6 +367,7 @@ function fillDateSelector() {
 
   // Obtener fechas únicas
   let fechas = [];
+  let fechasConIndices = []; // Para mantener el índice original
   
   for (let i = 0; i < allRows.length; i++) {
     const row = allRows[i];
@@ -368,46 +375,64 @@ function fillDateSelector() {
       const fecha = cleanDate(row[fechaIndex]);
       if (fecha && fecha.trim() !== "") {
         fechas.push(fecha);
+        fechasConIndices.push({ fecha, index: i });
       }
     }
   }
   
   console.log("Fechas encontradas:", fechas);
   
-  // Eliminar duplicados
-  fechas = [...new Set(fechas)];
+  // Eliminar duplicados manteniendo la más reciente
+  const fechasUnicas = [];
+  const fechasMap = new Map();
+  
+  // Procesar para mantener solo la más reciente de cada fecha
+  for (const item of fechasConIndices) {
+    fechasMap.set(item.fecha, item.index);
+  }
+  
+  // Convertir a array de fechas únicas
+  fechas = Array.from(fechasMap.keys());
   console.log("Fechas únicas:", fechas);
 
   if (fechas.length === 0) {
     console.warn("No se encontraron fechas válidas");
-    // Crear fechas basadas en el índice de la fila
+    // Usar índices como fechas
     for (let i = 0; i < allRows.length; i++) {
-      fechas.push(`Dato ${i + 1}`);
+      fechas.push(`Registro ${i + 1}`);
     }
   }
 
-  // Ordenar fechas (si parecen ser fechas reales)
+  // Ordenar fechas de más reciente a más antigua
+  // Primero intentar ordenar como fechas reales
+  let fechasOrdenadas = [...fechas];
+  
   if (fechas.length > 0 && /^\d{1,2}\/\d{1,2}\/\d{4}$/.test(fechas[0])) {
-    fechas.sort((a, b) => {
+    fechasOrdenadas.sort((a, b) => {
       try {
         const [da, ma, ya] = a.split("/").map(Number);
         const [db, mb, yb] = b.split("/").map(Number);
-        return new Date(yb, mb - 1, db) - new Date(ya, ma - 1, da);
+        return new Date(yb, mb - 1, db) - new Date(ya, ma - 1, da); // Más reciente primero
       } catch (e) {
         return 0;
       }
     });
+  } else {
+    // Si no son fechas reales, invertir el orden (último registro primero)
+    fechasOrdenadas.reverse();
   }
+  
+  console.log("Fechas ordenadas (más reciente primero):", fechasOrdenadas);
 
   // Agregar opciones al selector
-  fechas.forEach(fecha => {
+  fechasOrdenadas.forEach(fecha => {
     const option = document.createElement("option");
     option.value = fecha;
     option.textContent = fecha;
     selector.appendChild(option);
   });
 
-  console.log(`Se agregaron ${fechas.length} fechas al selector`);
+  console.log(`Se agregaron ${fechasOrdenadas.length} fechas al selector`);
 
   // Configurar evento de cambio
   selector.addEventListener("change", () => {
@@ -419,19 +444,21 @@ function fillDateSelector() {
 }
 
 function loadLatestDate() {
-  console.log("Cargando última fecha para métricas...");
+  console.log("Cargando fecha más reciente para métricas...");
   const selector = document.getElementById("dateSelector");
   if (!selector || selector.options.length <= 1) {
     console.error("No hay opciones en el selector de fechas");
     return;
   }
   
-  // Seleccionar la última fecha (la más reciente)
-  const ultimaFecha = selector.options[selector.options.length - 1].value;
-  console.log("Última fecha disponible:", ultimaFecha);
+  // La primera fecha después de "Seleccionar fecha" es la más reciente
+  // porque las ordenamos de más reciente a más antigua
+  const fechaMasReciente = selector.options[1].value;
+  console.log("Fecha más reciente disponible:", fechaMasReciente);
   
-  selector.value = ultimaFecha;
-  loadByDate(ultimaFecha);
+  // Seleccionar automáticamente la fecha más reciente
+  selector.value = fechaMasReciente;
+  loadByDate(fechaMasReciente);
 }
 
 function loadByDate(fechaSeleccionada) {
@@ -480,8 +507,9 @@ function loadByDate(fechaSeleccionada) {
     row = allRows[rowIndex];
     console.log(`Fila encontrada en índice ${rowIndex}:`, row);
   } else {
-    console.warn(`No se encontró fila para la fecha ${fechaSeleccionada}, usando primera fila`);
-    row = allRows[0];
+    console.warn(`No se encontró fila para la fecha ${fechaSeleccionada}, usando la última fila`);
+    // Usar la última fila (más reciente) como fallback
+    row = allRows[allRows.length - 1];
   }
   
   if (!row) {

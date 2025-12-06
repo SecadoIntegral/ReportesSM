@@ -597,8 +597,8 @@ function loadByDate(fechaSeleccionada) {
       <tr><td>Paros No Programados</td><td>${formatHoras(parosNoProg)}</td><td><span class="status-badge danger">Crítico</span></td></tr>
       <tr><td>Tiempo Total</td><td>${formatHoras(tiempoTotal)}</td><td><span class="status-badge warning">Normal</span></td></tr>
       <tr><td>Tiempo Muerto</td><td>${formatHoras(tiempoMuerto)}</td><td><span class="status-badge success">Excelente</span></td></tr>
-      <tr><td>QQs Mojado ingresados</td><td>${qqsMojadoIngresados}</td><td><span class="status-badge info">Nuevo</span></td></tr>
-      <tr><td>Procesados</td><td>${procesados}</td><td><span class="status-badge warning">Normal</span></td></tr>
+      <tr><td>QQs Mojado procesados</td><td>${qqsMojadoIngresados}</td><td><span class="status-badge info">Nuevo</span></td></tr>
+      <tr><td>QQs Oro Bruto Procesados</td><td>${procesados}</td><td><span class="status-badge warning">Normal</span></td></tr>
       <tr><td>Rechazados</td><td>${rechazados}</td><td><span class="status-badge success">Excelente</span></td></tr>
     `;
     console.log("Tabla de métricas actualizada");
@@ -635,3 +635,4 @@ document.addEventListener("DOMContentLoaded", function() {
   console.log("DOM cargado, iniciando carga de métricas...");
   loadDataMetrics();
 });
+

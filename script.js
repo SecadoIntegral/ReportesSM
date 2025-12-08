@@ -20,11 +20,26 @@ function parseFecha(fechaStr) {
   return new Date(año, mes, dia);
 }
 
-function fmt(num, isSecadoras = false) {
-  if (isSecadoras) return Math.round(Number(num || 0)).toString();
-  const n = Number((num || 0).toString().replace(",", "."));
+function fmt(value, isSecadoras = false) {
+  if (isSecadoras) {
+    // Permite texto o número
+    if (value === null || value === undefined) return "";
+
+    // Detectar si realmente es un número
+    const num = Number(value);
+
+    // Si NO es número → devolver tal cual (texto)
+    if (isNaN(num)) return value.toString().trim();
+
+    // Si es número → redondear y devolver string
+    return Math.round(num).toString();
+  }
+
+  // Para los demás campos (normal)
+  const n = Number((value || "0").toString().replace(",", "."));
   return isNaN(n) ? "0.00" : n.toFixed(2);
 }
+
 
 // CSV to JSON simple (usa encabezados)
 function csvToJson(csv) {
@@ -635,4 +650,3 @@ document.addEventListener("DOMContentLoaded", function() {
   console.log("DOM cargado, iniciando carga de métricas...");
   loadDataMetrics();
 });
-

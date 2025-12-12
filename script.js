@@ -129,6 +129,10 @@ function updateDashboard(data, dateFilter = "latest") {
   document.getElementById("sec-proceso").innerText = fmt(row["Secadoras En proceso"], true);
   document.getElementById("qq-proceso").innerText = fmt(row["QQ Proceso"]);
   document.getElementById("sec-pendientes").innerText = fmt(row["Secadoras Pendientes"], true);
+  // Supongamos que tus columnas en el CSV se llaman "Verticales en proceso" y "QQ Verticales"
+document.getElementById("vert-proceso").innerText = fmt(row["Verticales en proceso"], true);
+document.getElementById("qq-vert-proceso").innerText = fmt(row["QQ Verticales"]);
+
   document.getElementById("qq-pendientes").innerText = fmt(row["QQ pendientes"]);
   document.getElementById("sec-enviadas").innerText = fmt(row["Secadoras Enviadas"], true);
   document.getElementById("qq-enviados").innerText = fmt(row["QQ Enviados"]);

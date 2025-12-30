@@ -1,68 +1,61 @@
 /* --------------------
-   PRIMER SCRIPT (Dashboard principal desde GID 1945963055)
+   DASHBOARD PRINCIPAL
    -------------------- */
+
 const SPREADSHEET_ID = "1lFHQO8f33dK2W9tDbg0_74_0fddNU449ooAy-WuHdvg";
 const GID = "1945963055";
 const URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=${GID}`;
 
 let allData = [];
 
+/* ---------- UTILIDADES ---------- */
+
 // Parse fecha robusto (dd/mm/yyyy o yyyy-mm-dd)
 function parseFecha(fechaStr) {
   if (!fechaStr) return null;
-  fechaStr = (''+fechaStr).trim();
+  fechaStr = ("" + fechaStr).trim();
   if (/^\d{4}-\d{2}-\d{2}$/.test(fechaStr)) return new Date(fechaStr);
   const partes = fechaStr.split("/");
   if (partes.length !== 3) return null;
-  const dia = parseInt(partes[0], 10);
-  const mes = parseInt(partes[1], 10) - 1;
-  const año = parseInt(partes[2], 10);
-  return new Date(año, mes, dia);
+  return new Date(
+    parseInt(partes[2], 10),
+    parseInt(partes[1], 10) - 1,
+    parseInt(partes[0], 10)
+  );
 }
 
+// Formato de valores
 function fmt(value, isSecadoras = false) {
   if (isSecadoras) {
-    // Permite texto o número
     if (value === null || value === undefined) return "";
-
-    // Detectar si realmente es un número
     const num = Number(value);
-
-    // Si NO es número → devolver tal cual (texto)
     if (isNaN(num)) return value.toString().trim();
-
-    // Si es número → redondear y devolver string
     return Math.round(num).toString();
   }
-
-  // Para los demás campos (normal)
   const n = Number((value || "0").toString().replace(",", "."));
   return isNaN(n) ? "0.00" : n.toFixed(2);
 }
 
-
-// CSV to JSON simple (usa encabezados)
+// CSV → JSON
 function csvToJson(csv) {
   const lines = csv.trim().split(/\r?\n/);
-  if (lines.length === 0) return [];
+  if (!lines.length) return [];
   const headers = splitCsvLine(lines[0]);
-  const data = [];
-  for (let i = 1; i < lines.length; i++) {
-    const cols = splitCsvLine(lines[i]);
+  return lines.slice(1).map(line => {
+    const cols = splitCsvLine(line);
     const row = {};
-    headers.forEach((h, j) => row[h.trim()] = (cols[j] || "").trim());
-    data.push(row);
-  }
-  return data;
+    headers.forEach((h, i) => row[h.trim()] = (cols[i] || "").trim());
+    return row;
+  });
 }
 
-// splitCsvLine soporta comillas
+// Split CSV con soporte de comillas
 function splitCsvLine(line) {
   const result = [];
   let cur = "";
   let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
+
+  for (let ch of line) {
     if (ch === '"') {
       inQuotes = !inQuotes;
       continue;
@@ -78,115 +71,102 @@ function splitCsvLine(line) {
   return result;
 }
 
+/* ---------- SELECTOR FECHAS ---------- */
+
 function populateDateSelector(data) {
-  const dateSelect = document.getElementById("date-select");
-  while (dateSelect.options.length > 1) dateSelect.remove(1);
+  const select = document.getElementById("date-select");
+  while (select.options.length > 1) select.remove(1);
 
-  const dates = [...new Set(data.map(r => r.Fecha))]
-    .filter(f => f && f !== "")
-    .sort((a, b) => parseFecha(b) - parseFecha(a));
-
-  dates.forEach(date => {
-    const option = document.createElement("option");
-    const d = parseFecha(date);
-    option.value = date;
-    option.textContent = d ? d.toLocaleDateString("es-ES") : date;
-    dateSelect.appendChild(option);
-  });
+  [...new Set(data.map(r => r.Fecha))]
+    .filter(Boolean)
+    .sort((a, b) => parseFecha(b) - parseFecha(a))
+    .forEach(date => {
+      const opt = document.createElement("option");
+      opt.value = date;
+      const d = parseFecha(date);
+      opt.textContent = d ? d.toLocaleDateString("es-ES") : date;
+      select.appendChild(opt);
+    });
 }
 
+/* ---------- DASHBOARD ---------- */
+
 function updateDashboard(data, dateFilter = "latest") {
-  let row;
-  if (dateFilter === "latest") {
-    // Siempre usar la última fila (más reciente)
-    row = data[data.length - 1];
-    // También actualizar el selector para que muestre la más reciente
-    const dateSelect = document.getElementById("date-select");
-    if (dateSelect) {
-      dateSelect.value = "latest";
-    }
-  } else {
-    row = data.find(r => r.Fecha === dateFilter);
-  }
+  let row =
+    dateFilter === "latest"
+      ? data[data.length - 1]
+      : data.find(r => r.Fecha === dateFilter);
+
   if (!row) return;
 
   const f = parseFecha(row.Fecha);
-  const fechaMostrar = f ? f.toLocaleDateString("es-ES") : (row.Fecha || "");
-
   document.getElementById("fecha").innerText =
-    "Datos de: " + fechaMostrar +
-    " | Actualizado: " + new Date().toLocaleString();
+    "Datos de: " +
+    (f ? f.toLocaleDateString("es-ES") : row.Fecha) +
+    " | Actualizado: " +
+    new Date().toLocaleString();
 
-  // Compatibilidad: si el CSV tiene "QQs Mojado ingresados" o "qq mojado" o "QQ Mojado"
+  // Claves dinámicas
+  const totalQssKey = ["Total QQs", "Total Qss", "Total QQ"].find(k => k in row);
+  const qqPresecoKey = ["qq pre-seco", "QQ Pre-Seco", "QQ Preseco"].find(k => k in row);
   const qqMojadoKey = ["QQs Mojado ingresados", "qq mojado", "QQ Mojado", "QQs Mojado"].find(k => k in row);
-  const totalQssKey = ["Total QQs", "Total Qss", "Total QQ"].find(k => k in row) || "Total QQs";
-  const qqPresecoKey = ["qq pre-seco", "QQ Pre-Seco", "QQ Preseco"].find(k => k in row) || "qq pre-seco";
+  const qqHumedoKey = ["QQ Humedo", "qq humedo", "QQs Humedo"].find(k => k in row);
 
+  // PRINCIPALES
   document.getElementById("total-qss").innerText = fmt(row[totalQssKey]);
   document.getElementById("qq-preseco").innerText = fmt(row[qqPresecoKey]);
-  document.getElementById("qq-mojado").innerText = fmt( qqMojadoKey ? row[qqMojadoKey] : (row["qq mojado"] || row["QQ Mojado"] || 0) );
+  document.getElementById("qq-mojado").innerText = fmt(qqMojadoKey ? row[qqMojadoKey] : 0);
+  document.getElementById("qq-humedo").innerText = fmt(qqHumedoKey ? row[qqHumedoKey] : 0);
 
+  // SECADORAS
   document.getElementById("sec-proceso").innerText = fmt(row["Secadoras En proceso"], true);
   document.getElementById("qq-proceso").innerText = fmt(row["QQ Proceso"]);
   document.getElementById("sec-pendientes").innerText = fmt(row["Secadoras Pendientes"], true);
-  // Supongamos que tus columnas en el CSV se llaman "Verticales en proceso" y "QQ Verticales"
-document.getElementById("vert-proceso").innerText = fmt(row["Verticales en proceso"], true);
-document.getElementById("qq-vert-proceso").innerText = fmt(row["QQ Verticales"]);
-
   document.getElementById("qq-pendientes").innerText = fmt(row["QQ pendientes"]);
   document.getElementById("sec-enviadas").innerText = fmt(row["Secadoras Enviadas"], true);
   document.getElementById("qq-enviados").innerText = fmt(row["QQ Enviados"]);
 
+  // VERTICALES
+  document.getElementById("vert-proceso").innerText = fmt(row["Verticales en proceso"], true);
+  document.getElementById("qq-vert-proceso").innerText = fmt(row["QQ Verticales"]);
+
   document.getElementById("loading").style.display = "none";
 }
+
+/* ---------- CARGA DATOS ---------- */
 
 async function loadData() {
   document.getElementById("loading").style.display = "block";
   try {
-    const resp = await fetch(URL + "&cachebust=" + Date.now());
+    const resp = await fetch(URL + "&_=" + Date.now());
     const csv = await resp.text();
     allData = csvToJson(csv);
     populateDateSelector(allData);
-    // Siempre cargar la fecha más reciente
     updateDashboard(allData, "latest");
   } catch (err) {
-    console.error("Error cargando primer CSV:", err);
-    document.getElementById("loading").innerText = "Error cargando datos principales";
+    console.error(err);
+    document.getElementById("loading").innerText = "Error cargando datos";
   }
 }
 
-// El botón de actualizar llamará a ambas funciones
+/* ---------- REFRESH ---------- */
+
 async function refreshAllData() {
-  console.log("Actualizando todas las hojas...");
-  
-  // Mostrar estado de carga en ambos dashboards
   document.getElementById("loading").style.display = "block";
   document.getElementById("loading").innerText = "Actualizando datos...";
-  
-  const loadingMetrics = document.getElementById("loading-message");
-  if (loadingMetrics) {
-    loadingMetrics.style.display = "block";
-    loadingMetrics.textContent = "Actualizando métricas...";
-    loadingMetrics.className = "loading";
-  }
-  
-  // Actualizar ambos dashboards
-  await Promise.all([
-    loadData(),
-    loadDataMetrics()
-  ]);
-  
-  console.log("Actualización completa");
+  await loadData();
 }
 
-// Configurar el botón de actualizar
+/* ---------- EVENTOS ---------- */
+
 document.getElementById("refresh-btn").addEventListener("click", refreshAllData);
 document.getElementById("date-select").addEventListener("change", function () {
   updateDashboard(allData, this.value);
 });
 
-// Cargar datos iniciales - SIEMPRE con la fecha más reciente
+// Carga inicial
 loadData();
+
 
 /* --------------------
    SEGUNDO SCRIPT (Métricas / KPIs desde CSV_URL)
@@ -608,3 +588,5 @@ document.addEventListener("DOMContentLoaded", function() {
 
 // Hacer refreshAllData disponible globalmente
 window.refreshAllData = refreshAllData;
+
+

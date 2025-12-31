@@ -300,13 +300,21 @@ function cleanDate(str) {
 
 function formatPercent(valor) {
   if (!valor || valor === "") return "--%";
+
   valor = valor.toString().replace("%", "").replace(",", ".").trim();
   let num = parseFloat(valor);
+
   if (isNaN(num)) return "--%";
+
+  // Si viene como 0.96 → 96%
   if (num <= 1 && num > 0) num = num * 100;
-  if (num > 100) num = 100; // Limitar a 100%
+
+  // ❌ QUITAR ESTA LÍNEA
+  // if (num > 100) num = 100;
+
   return num.toFixed(2) + "%";
 }
+
 
 function formatHoras(valor) {
   if (!valor || valor === "") return "00:00:00";
@@ -588,5 +596,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
 // Hacer refreshAllData disponible globalmente
 window.refreshAllData = refreshAllData;
+
 
 

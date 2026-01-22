@@ -321,3 +321,32 @@ tr:hover {
 .oculto {
   display: none !important;
 }
+
+.boton-flotante {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #ff5722;
+  color: white;
+  padding: 15px 20px;
+  border-radius: 50px;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 16px;
+  opacity: 0.7;              /* Transparencia inicial */
+  transition: opacity 0.3s, transform 0.3s;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  z-index: 1000;
+}
+
+.boton-flotante:hover {
+  opacity: 1;                 /* Se hace opaco al pasar el mouse */
+  transform: scale(1.1);      /* Efecto zoom sutil */
+}
+
+.boton-flotante.oculto {
+  opacity: 0;
+  transform: scale(0);
+  pointer-events: none;       /* No se puede clicar mientras desaparece */
+  transition: opacity 0.5s, transform 0.5s;
+}

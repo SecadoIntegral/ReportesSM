@@ -315,7 +315,6 @@ function formatPercent(valor) {
   return num.toFixed(2) + "%";
 }
 
-
 function formatHoras(valor) {
   if (!valor || valor === "") return "00:00:00";
   valor = valor.toString().trim();
@@ -597,5 +596,13 @@ document.addEventListener("DOMContentLoaded", function() {
 // Hacer refreshAllData disponible globalmente
 window.refreshAllData = refreshAllData;
 
+  const boton = document.getElementById('boton-flotante');
 
+  boton.addEventListener('click', function(e) {
+    e.preventDefault(); // Evita que navegue de inmediato
+    boton.classList.add('oculto'); // Añade clase para animación de salida
 
+    setTimeout(() => {
+      window.location.href = boton.href; // Redirige tras animación
+    }, 500); // Tiempo en ms que coincide con la transición CSS
+  });

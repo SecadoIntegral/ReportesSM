@@ -5,318 +5,305 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Analisis de tiempos Secado Mecánico</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    /* RESET Y BASE */
-    * { 
-      box-sizing: border-box; 
-      margin: 0; 
-      padding: 0; 
-      -webkit-tap-highlight-color: transparent;
-    }
-    
-    body { 
-      font-family: 'Segoe UI', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif; 
-      background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%); 
-      color: #333; 
-      padding: 16px;
-      line-height: 1.5;
-      min-height: 100vh;
-    }
+ <style>
+/* ===============================
+   RESET Y BASE
+================================ */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
 
-    /* CABECERA */
-    .header {
-      text-align: center;
-      margin-bottom: 24px;
-      padding: 16px;
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 4px 12px rgba(31, 60, 136, 0.08);
-    }
-    
-    .header h1 {
-      font-size: 1.5rem;
-      color: #1f3c88;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-    }
-    
-    .header i {
-      color: #4a6fc1;
-    }
+body {
+  font-family: 'Segoe UI', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(135deg, #f2f2f2 0%, #e6e6e6 100%);
+  color: #333;
+  padding: 16px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
 
-    /* SECCIONES */
-    .section { 
-      margin-bottom: 24px; 
-      background: #fff; 
-      padding: 20px; 
-      border-radius: 16px; 
-      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .section::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 4px;
-      background: linear-gradient(to right, #1f3c88, #4a6fc1);
-      border-radius: 16px 16px 0 0;
-    }
+/* ===============================
+   CABECERA
+================================ */
+.header {
+  text-align: center;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(134, 0, 99, 0.12);
+}
 
-    /* TÍTULOS DE SECCIÓN */
-    .section-header { 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-      margin-bottom: 20px;
-    }
-    
-    .section-header h2 { 
-      font-size: 1.3rem; 
-      color: #1f3c88; 
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .section-header i {
-      font-size: 1.1rem;
-    }
+.header h1 {
+  font-size: 1.5rem;
+  color: #860063;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
 
-    /* TARJETAS */
-    .cards { 
-      display: grid; 
-      gap: 16px; 
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
-    }
-    
-    /* Colores armónicos para las primeras 3 tarjetas de cada sección */
-    .card:nth-child(1) { 
-      background: linear-gradient(135deg, #4a6fc1, #6a8ad8);
-      color: white;
-    }
-    
-    .card:nth-child(2) { 
-      background: linear-gradient(135deg, #43a1a9, #5cc2cc);
-      color: white;
-    }
-    
-    .card:nth-child(3) { 
-      background: linear-gradient(135deg, #f0933b, #ffb347);
-      color: white;
-    }
-    
-    /* Tarjetas del 4 en adelante */
-    .card:nth-child(n+4) { 
-      background: linear-gradient(135deg, #ffffff, #f0f5ff);
-      color: #333;
-    }
-    
-    .card { 
-      padding: 18px 14px; 
-      border-radius: 14px; 
-      text-align: center; 
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
-      transition: all 0.3s ease; 
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      min-height: 110px;
-      position: relative;
-      overflow: hidden;
-    }
-    
-    .card::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(rgba(255,255,255,0.1), rgba(0,0,0,0.05));
-      pointer-events: none;
-    }
-    
-    .card:hover, .card:active { 
-      transform: translateY(-5px); 
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15); 
-    }
-    
-    .card-title { 
-      font-weight: 600; 
-      font-size: 0.9rem; 
-      margin-bottom: 8px; 
-      line-height: 1.3;
-    }
-    
-    .card:nth-child(-n+3) .card-title {
-      color: rgba(255,255,255,0.95);
-    }
-    
-    .card:nth-child(n+4) .card-title {
-      color: #0d2b4a;
-    }
-    
-    .card-value { 
-      font-size: 1.5rem; 
-      font-weight: bold; 
-      margin-top: 4px;
-    }
-    
-    .card:nth-child(-n+3) .card-value {
-      color: white;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
-    
-    .card:nth-child(n+4) .card-value {
-      color: #1f3c88;
-    }
+.header i {
+  color: #f78c2a;
+}
 
-    /* BOTONES Y FILTROS */
-    .toggle-btn { 
-      padding: 10px 16px; 
-      border-radius: 10px; 
-      border: none; 
-      background: linear-gradient(to right, #1f3c88, #4a6fc1); 
-      color: #fff; 
-      cursor: pointer; 
-      font-size: 0.9rem; 
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s;
-      box-shadow: 0 2px 6px rgba(31, 60, 136, 0.3);
-    }
-    
-    .toggle-btn:active { 
-      transform: scale(0.98); 
-      box-shadow: 0 1px 3px rgba(31, 60, 136, 0.3);
-    }
-    
-    .filter { 
-      margin-bottom: 20px; 
-      display: flex; 
-      align-items: center; 
-      gap: 12px; 
-      flex-wrap: wrap;
-      background: #f8faff;
-      padding: 16px;
-      border-radius: 12px;
-    }
-    
-    .filter label { 
-      font-weight: 600;
-      color: #1f3c88;
-      font-size: 0.95rem;
-    }
-    
-    select { 
-      padding: 12px 16px; 
-      border-radius: 10px; 
-      border: 1px solid #d1d9ff; 
-      background-color: #fff; 
-      cursor: pointer; 
-      font-size: 0.95rem; 
-      flex-grow: 1;
-      color: #333;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    
-    select:focus {
-      outline: none;
-      border-color: #4a6fc1;
-      box-shadow: 0 0 0 3px rgba(74, 111, 193, 0.2);
-    }
+/* ===============================
+   SECCIONES
+================================ */
+.section {
+  margin-bottom: 24px;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
+}
 
-    /* LOADING Y ERROR */
-    .loading {
-      text-align: center;
-      padding: 40px 20px;
-      color: #4a6fc1;
-    }
-    
-    .error {
-      text-align: center;
-      padding: 20px;
-      background: #ffeaea;
-      border-radius: 12px;
-      color: #d32f2f;
-      margin-top: 20px;
-    }
-    
-    .refresh-btn {
-      margin-top: 15px;
-      padding: 10px 20px;
-      background: #1f3c88;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-    }
+.section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 4px;
+  width: 100%;
+  background: linear-gradient(to right, #860063, #f78c2a);
+}
 
-    /* RESPONSIVE */
-    @media (max-width: 768px) {
-      body { padding: 12px; }
-      .header { padding: 14px; }
-      .section { padding: 18px 16px; }
-      .cards { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
-      .card { padding: 16px 12px; min-height: 100px; }
-      .card-value { font-size: 1.4rem; }
-    }
-    
-    @media (max-width: 480px) {
-      .cards { grid-template-columns: 1fr 1fr; gap: 12px; }
-      .section-header { flex-direction: column; align-items: flex-start; gap: 12px; }
-      .toggle-btn { align-self: flex-start; }
-      .filter { flex-direction: column; align-items: flex-start; }
-      select { width: 100%; }
-      .card-title { font-size: 0.85rem; }
-      .card-value { font-size: 1.3rem; }
-    }
-    
-    /* Mejoras para toques en Android */
-    @media (hover: none) and (pointer: coarse) {
-      .card:hover { transform: none; }
-      .card:active { transform: translateY(-3px); }
-      .toggle-btn:hover { background: linear-gradient(to right, #1f3c88, #4a6fc1); }
-      .toggle-btn:active { background: linear-gradient(to right, #163266, #3a5aad); }
-    }
-    
-    /* Animaciones */
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .card {
-      animation: fadeIn 0.5s ease forwards;
-      opacity: 0;
-    }
-    
-    .card:nth-child(1) { animation-delay: 0.1s; }
-    .card:nth-child(2) { animation-delay: 0.2s; }
-    .card:nth-child(3) { animation-delay: 0.3s; }
-    .card:nth-child(4) { animation-delay: 0.4s; }
-    .card:nth-child(5) { animation-delay: 0.5s; }
-    .card:nth-child(6) { animation-delay: 0.6s; }
-    .card:nth-child(7) { animation-delay: 0.7s; }
-    .card:nth-child(8) { animation-delay: 0.8s; }
-    .card:nth-child(9) { animation-delay: 0.9s; }
-    .card:nth-child(10) { animation-delay: 1.0s; }
-    
-    /* Scroll suave */
-    html {
-      scroll-behavior: smooth;
-    }
-  </style>
+/* ===============================
+   TÍTULOS DE SECCIÓN
+================================ */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.section-header h2 {
+  font-size: 1.3rem;
+  color: #860063;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ===============================
+   TARJETAS
+================================ */
+.cards {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+}
+
+/* === Primeras 3 tarjetas (marca) === */
+.card:nth-child(1) {
+  background: linear-gradient(135deg, #860063, #b34a8d);
+  color: #fff;
+}
+
+.card:nth-child(2) {
+  background: linear-gradient(135deg, #f78c2a, #ffc085);
+  color: #fff;
+}
+
+.card:nth-child(3) {
+  background: linear-gradient(135deg, #00a5b5, #6fd3dc);
+  color: #fff;
+}
+
+/* === Resto de tarjetas === */
+.card:nth-child(n+4) {
+  background: linear-gradient(135deg, #ffffff, #f4f4f4);
+  color: #333;
+}
+
+.card {
+  padding: 18px 14px;
+  border-radius: 14px;
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 110px;
+  position: relative;
+  overflow: hidden;
+}
+
+.card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    rgba(255, 255, 255, 0.12),
+    rgba(0, 0, 0, 0.05)
+  );
+  pointer-events: none;
+}
+
+.card:active,
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+}
+
+/* ===============================
+   TEXTO DE TARJETAS
+================================ */
+.card-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.card:nth-child(n+4) .card-title {
+  color: #555;
+}
+
+.card-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.card:nth-child(n+4) .card-value {
+  color: #860063;
+}
+
+/* ===============================
+   TARJETA DESTACADA DISCRETA
+================================ */
+.card.destacada-vertical {
+  background: linear-gradient(135deg, #ffffff, #f4f4f4);
+  border-left: 5px solid #ffffff; /* Azul corporativo */
+  box-shadow: 0 6px 16px rgba(255, 255, 255, 0.18);
+}
+
+
+
+.card.destacada-vertical .card-title {
+  color: #444;
+}
+
+.card.destacada-vertical .card-value {
+  color: #860063; /* color principal de marca */
+  font-weight: 700;
+}
+
+/* Hover suave (igual a cards normales pero un poco más elegante) */
+.card.destacada-vertical:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 22px rgba(55, 53, 192, 0.25);
+}
+
+
+/* ===============================
+   BOTONES Y FILTROS
+================================ */
+.toggle-btn {
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(to right, #860063, #f78c2a);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 10px rgba(134, 0, 99, 0.35);
+}
+
+.toggle-btn:active {
+  transform: scale(0.97);
+}
+
+.filter {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: #f7f7f7;
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.filter label {
+  font-weight: 600;
+  color: #860063;
+}
+
+select {
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  background: #fff;
+  font-size: 0.95rem;
+}
+
+select:focus {
+  outline: none;
+  border-color: #00a5b5;
+  box-shadow: 0 0 0 3px rgba(0, 165, 181, 0.25);
+}
+
+/* ===============================
+   ESTADOS
+================================ */
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #3735c0;
+}
+
+.error {
+  text-align: center;
+  padding: 20px;
+  background: #ffeaea;
+  border-radius: 12px;
+  color: #d83548;
+}
+
+/* ===============================
+   RESPONSIVE
+================================ */
+@media (max-width: 768px) {
+  body { padding: 12px; }
+  .cards { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+}
+
+@media (max-width: 480px) {
+  .cards { grid-template-columns: 1fr 1fr; }
+  .section-header { flex-direction: column; align-items: flex-start; }
+}
+
+/* ===============================
+   ANIMACIONES
+================================ */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card {
+  animation: fadeIn 0.5s ease forwards;
+  opacity: 0;
+}
+
+/* Scroll suave */
+html { scroll-behavior: smooth; }
+
+
+
+</style>
+
 </head>
 <body>
   <!-- CABECERA -->
@@ -431,27 +418,33 @@ boton.addEventListener('click', function(e) {
     };
 
     function renderCards(containerId, labels, data) {
-      const container = document.getElementById(containerId);
-      container.innerHTML = "";
-      
-      // Si no hay datos, mostrar mensaje
-      if (!data || Object.keys(data).length === 0) {
-        container.innerHTML = `<div class="error">No hay datos disponibles</div>`;
-        return;
-      }
-      
-      // Crear tarjetas
-      labels.forEach(label => {
-        const value = data[label]?.trim() || "-";
-        const card = document.createElement("div");
-        card.className = "card";
-        card.innerHTML = `
-          <div class="card-title">${label}</div>
-          <div class="card-value">${value}</div>
-        `;
-        container.appendChild(card);
-      });
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+
+  if (!data || Object.keys(data).length === 0) {
+    container.innerHTML = `<div class="error">No hay datos disponibles</div>`;
+    return;
+  }
+
+  labels.forEach(label => {
+    const value = data[label]?.trim() || "-";
+    const card = document.createElement("div");
+    card.className = "card";
+
+    // 👉 DESTACAR TARJETA ESPECÍFICA
+    if (label === "Promedio de ciclo vertical 1") {
+      card.classList.add("destacada-vertical");
     }
+
+    card.innerHTML = `
+      <div class="card-title">${label}</div>
+      <div class="card-value">${value}</div>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
 
     function toggleSection(id) {
       const el = document.getElementById(id);

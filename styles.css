@@ -322,31 +322,62 @@ tr:hover {
   display: none !important;
 }
 
-.boton-flotante {
+  .boton-flotante {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #ff5722;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 16px;
+    opacity: 0.7;              /* Transparencia inicial */
+    transition: opacity 0.3s, transform 0.3s;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    z-index: 1000;
+  }
+
+  .boton-flotante:hover {
+    opacity: 1;                 /* Se hace opaco al pasar el mouse */
+    transform: scale(1.1);      /* Efecto zoom sutil */
+  }
+
+  .boton-flotante.oculto {
+    opacity: 0;
+    transform: scale(0);
+    pointer-events: none;       /* No se puede clicar mientras desaparece */
+    transition: opacity 0.5s, transform 0.5s;
+  }
+
+/* Botón Motores: mismo estilo, pero MÁS ARRIBA que Tiempos */
+.boton-flotante-Motores{
   position: fixed;
-  bottom: 20px;
   right: 20px;
-  background-color: #ff5722;
+  bottom: 80px;              /* 👈 más arriba que el de tiempos (20px) */
+  background-color: #3f51b5; /* opcional, para diferenciar */
   color: white;
   padding: 15px 20px;
   border-radius: 50px;
   text-decoration: none;
   font-weight: bold;
   font-size: 16px;
-  opacity: 0.7;              /* Transparencia inicial */
+  opacity: 0.7;
   transition: opacity 0.3s, transform 0.3s;
   box-shadow: 0 4px 8px rgba(0,0,0,0.3);
   z-index: 1000;
 }
 
-.boton-flotante:hover {
-  opacity: 1;                 /* Se hace opaco al pasar el mouse */
-  transform: scale(1.1);      /* Efecto zoom sutil */
+.boton-flotante-Motores:hover{
+  opacity: 1;
+  transform: scale(1.1);
 }
 
-.boton-flotante.oculto {
+/* si también querés poder ocultarlo con una clase */
+.boton-flotante-Motores.oculto{
   opacity: 0;
   transform: scale(0);
-  pointer-events: none;       /* No se puede clicar mientras desaparece */
+  pointer-events: none;
   transition: opacity 0.5s, transform 0.5s;
 }

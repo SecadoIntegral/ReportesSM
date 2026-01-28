@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Motores | Vista Operacional</title>
+
+  <style>
+    :root{
+      /* ✅ TEMA CLARO */
+      --bg:#f4f6fb;
+      --card:#ffffff;
+      --card2:#f8fafc;
+      --primary:#2563eb;
+      --accent:#0ea5e9;
+      --secondary:#16a34a;
+      --text:#111827;
+      --muted:#6b7280;
+      --stroke: rgba(0,0,0,.10);
+      --stroke2: rgba(37,99,235,.18);
+
+      --radius:18px;
+      --shadow:0 10px 22px rgba(17,24,39,.08);
+
+      --tap: 52px; /* altura cómoda táctil */
+    }
+
+    *{
+      box-sizing:border-box;
+      margin:0;
+      padding:0;
+      font-family:"Segoe UI", Roboto, Arial, sans-serif;
+      -webkit-tap-highlight-color:transparent;
+    }
+
+    body{
+      background:linear-gradient(180deg,#ffffff,var(--bg));
+      color:var(--text);
+      padding:16px;
+      padding-bottom: calc(16px + env(safe-area-inset-bottom));
+    }
+
+    header{
+      text-align:center;
+      margin-bottom:16px;
+    }
+
+    header h1{
+      font-size:1.45rem;
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+
+    header p{
+      color:var(--muted);
+      font-size:.9rem;
+      margin-top:4px;
+    }
+
+    /* =========================
+       DETAILS / SUMMARY (LLAVES)
+    ========================= */
+    details{ margin-bottom:14px; }
+
+    summary{
+      list-style:none;
+      cursor:pointer;
+      min-height:var(--tap);
+      padding:14px 14px;
+      border-radius:16px;
+      background:linear-gradient(180deg,#ffffff,#eef2ff);
+      border:1px solid var(--stroke);
+      box-shadow:var(--shadow);
+
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+
+      font-size:.95rem;
+      font-weight:800;
+      user-select:none;
+      touch-action:manipulation;
+    }
+
+    summary::-webkit-details-marker{ display:none; }
+
+    summary .sum-left{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+    summary .sum-text{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    summary::after{
+      content:"▾";
+      flex:0 0 auto;
+      font-size:1.15rem;
+      color:var(--primary);
+      transition:transform .22s ease;
+    }
+    details[open] > summary::after{ transform:rotate(180deg); }
+
+    /* Nivel 2: dentro de una sección */
+    details details{
+      margin-top:10px;
+      margin-left:8px;
+      border-left:2px solid rgba(37,99,235,.12);
+      padding-left:10px;
+    }
+    details details summary{
+      background:linear-gradient(180deg,#ffffff,var(--card2));
+      font-size:.88rem;
+      font-weight:700;
+      box-shadow: 0 8px 18px rgba(17,24,39,.06);
+    }
+
+    /* Animación suave del contenido */
+    details > *:not(summary){
+      animation: fadeIn .18s ease;
+    }
+    @keyframes fadeIn{
+      from{ opacity:0; transform:translateY(-4px); }
+      to{ opacity:1; transform:translateY(0); }
+    }
+
+    /* ================= GRID / CARDS ================= */
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap:14px;
+      margin-top:12px;
+    }
+
+    @media (max-width:520px){
+      .grid{ grid-template-columns: 1fr; }
+      body{ padding:14px; }
+      header h1{ font-size:1.3rem; }
+    }
+    
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:14px;
+      border:1px solid var(--stroke);
+      box-shadow:var(--shadow);
+      transition:transform .15s ease, box-shadow .15s ease;
+    }
+
+    .card:active{
+      transform:scale(.98);
+      box-shadow:0 12px 26px rgba(17,24,39,.12);
+    }
+
+    .badge{
+      display:inline-block;
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:.72rem;
+      font-weight:900;
+      background:rgba(37,99,235,.10);
+      color:var(--primary);
+      margin-bottom:8px;
+      border:1px solid var(--stroke2);
+    }
+
+    .title{
+      font-size:.95rem;
+      font-weight:800;
+      margin-bottom:10px;
+      line-height:1.25;
+    }
+
+    .info{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:8px;
+      font-size:.78rem;
+    }
+
+    .info div{
+      background:#f1f5f9;
+      border-radius:12px;
+      padding:8px;
+      text-align:center;
+      border:1px solid rgba(0,0,0,.06);
+    }
+
+    .info span{
+      display:block;
+      font-size:.65rem;
+      color:var(--muted);
+      margin-bottom:2px;
+    }
+
+    .code{
+      color:var(--secondary);
+      font-weight:900;
+      font-size:.9rem;
+      letter-spacing:.2px;
+    }
+
+    footer{
+      margin-top:20px;
+      text-align:center;
+      font-size:.75rem;
+      color:var(--muted);
+    }
+
+    /* ====== LLAVES PARA CADA MÁQUINA ====== */
+details.machine{
+  margin: 0;                 /* para que encaje en el grid */
+}
+
+details.machine > summary{
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px;
+  min-height: auto;
+  display: block;            /* lo hacemos tipo card */
+}
+
+details.machine > summary::after{
+  /* mantenemos el icono de flecha */
+  float: right;
+  margin-top: -2px;
+}
+
+details.machine .machine-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+}
+
+details.machine .machine-left{
+  min-width:0;
+}
+
+details.machine .machine-title{
+  font-size:.95rem;
+  font-weight:800;
+  line-height:1.25;
+  margin-top:8px;
+}
+
+details.machine .badge{
+  margin:0;
+}
+
+details.machine .machine-body{
+  margin-top:10px;
+}
+
+details.machine .info{
+  margin-top:0;
+}
+
+/* Más “tap friendly” en móvil */
+details.machine > summary{
+  touch-action:manipulation;
+}
+
+  </style>
+</head>
+<script>
+  // Cerrar TODAS las pestañas al cargar
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("details[open]").forEach(d => d.open = false);
+  });
+
+  // Acordeón real: solo una abierta por nivel (si abres una, cierra las hermanas)
+  (function () {
+    document.addEventListener("toggle", function (e) {
+      const d = e.target;
+      if (!(d instanceof HTMLDetailsElement)) return;
+      if (!d.open) return;
+
+      const parentDetails = d.parentElement?.closest("details");
+      const container = parentDetails ? parentDetails : (document.querySelector("section") || document.body);
+
+      const siblings = Array.from(container.querySelectorAll(":scope > details"));
+      siblings.forEach((sib) => { if (sib !== d) sib.open = false; });
+    }, true);
+  })();
+</script>
+
+<body>
+  <header>
+    <h1>Vista Operacional</h1>
+    <p>· Motores / Hornos / Bandas</p>
+  </header>
+
+  <section>
+
+    <!-- =========================
+         SECCIÓN PRINCIPAL 1
+    ========================== -->
+    <details>
+      <summary>
+        <span class="sum-left">
+          <span>🧰</span>
+          <span class="sum-text">Motores Pre-Secado</span>
+        </span>
+      </summary>
+
+      <!-- ======= TU CONTENIDO PRE-SECADO (igual, solo re-ubicado dentro de la sección principal) ======= -->
+
+      <details>
+        <summary><span class="sum-left"><span>🔧</span><span class="sum-text">Motores Tren 1 (CCM-2)</span></span></summary>
+
+        <details>
+          <summary><span class="sum-left"><span class="sum-text">Vertical #1</span></span></summary>
+          <div class="grid">
+            <div class="card"><span class="badge">#2</span><div class="title">Elevador Vertical #1</div><div class="info"><div><span>Código</span><div class="code">Q-24</div></div><div><span>CCM</span>CCM-2</div></div></div>
+            <div class="card"><span class="badge">#3</span><div class="title">Banda Superior Vertical #1</div><div class="info"><div><span>Código</span><div class="code">Q-20</div></div><div><span>CCM</span>CCM-2</div></div></div>
+            <div class="card"><span class="badge">#4</span><div class="title">Botador Derecho Vertical #1</div><div class="info"><div><span>Código</span><div class="code">Q-12</div></div><div><span>CCM</span>CCM-2</div></div></div>
+            <div class="card"><span class="badge">#5</span><div class="title">Botador Izquierdo Vertical #1</div><div class="info"><div><span>Código</span><div class="code">Q-13</div></div><div><span>CCM</span>CCM-2</div></div></div>
+            <div class="card"><span class="badge">#6</span><div class="title">Banda Inferior Vertical #1</div><div class="info"><div><span>Código</span><div class="code">Q-8</div></div><div><span>CCM</span>CCM-2</div></div></div>
+            <div class="card"><span class="badge">#7</span><div class="title">Blower Vertical #1</div><div class="info"><div><span>Código</span><div class="code">B-01</div></div><div><span>CCM</span>CCM-2</div></div></div>
+          </div>
+        </details>
+
+        <details>
+          <summary><span class="sum-left"><span class="sum-text">Vertical #2</span></span></summary>
+          <div class="grid">
+            <div class="card"><span class="badge">#8</span><div class="title">Elevador Vertical #2</div><div class="info"><div><span>Código</span><div class="code">Q-25</div></div><div><span>CCM</span>CCM-2</div></div></div>
+            <div class="card"><span class="badge">#9</span><div class="title">Banda Superior Vertical #2</div><div class="info"><div><span>Código</span><div class="code">Q-21</div></div><div><span>CCM</span>CCM-2</div></div></div>
+            <div class="card"><span class="badge">#10</span><div class="title">Botador Derecho Vertical #2</div><div class="info"><div><span>Código</span><div class="code">Q-14</div></div><div><span>CCM</span>CCM-2</div></div></div>
+            <div class="card"><span class="badge">#11</span><div class="title">Botador Izquierdo Vertical #2</div><div class="info"><div><span>Código</span><div class="code">Q-15</div></div><div><span>CCM</span>CCM-2</div></div></div>
+            <div class="card"><span class="badge">#12</span><div class="title">Banda Inferior Vertical #2</div><div class="info"><div><span>Código</span><div class="code">Q-9</div></div><div><span>CCM</span>CCM-2</div></div></div>
+            <div class="card"><span class="badge">#13</span><div class="title">Blower Vertical #2</div><div class="info"><div><span>Código</span><div class="code">B-02</div></div><div><span>CCM</span>CCM-2</div></div></div>
+          </div>
+        </details>
+
+        <details>
+          <summary><span class="sum-left"><span class="sum-text">Vertical #3</span></span></summary>
+          <div class="grid">
+            <div class="card"><span class="badge">#14</span><div class="title">Elevador Vertical #3</div><div class="info"><div><span>Código</span><div class="code">Q-26</div></div><div><span>CCM</span>CCM-2</div></div></div>
+            <div class="card"><span class="badge">#15</span><div class="title">Banda Superior Vertical #3</div><div class="info"><div><span>Código</span><div class="code">Q-22</div></div><div><span>CCM</span>CCM-2</div></div></div>
+            <div class="card"><span class="badge">#16</span><div class="title">Botador Derecho Vertical #3</div><div class="info"><div><span>Código</span><div class="code">Q-16</div></div><div><span>CCM</span>CCM-2</div></div></div>
+            <div class="card"><span class="badge">#17</span><div class="title">Botador Izquierdo Vertical #3</div><div class="info"><div><span>Código</span><div class="code">Q-17</div></div><div><span>CCM</span>CCM-2</div></div></div>
+            <div class="card"><span class="badge">#18</span><div class="title">Banda Inferior Vertical #3</div><div class="info"><div><span>Código</span><div class="code">Q-10</div></div><div><span>CCM</span>CCM-2</div></div></div>
+            <div class="card"><span class="badge">#19</span><div class="title">Blower Vertical #3</div><div class="info"><div><span>Código</span><div class="code">B-03</div></div><div><span>CCM</span>CCM-2</div></div></div>
+          </div>
+        </details>
+
+        <details>
+          <summary><span class="sum-left"><span class="sum-text">Vertical #4</span></span></summary>
+          <div class="grid">
+            <div class="card"><span class="badge">#20</span><div class="title">Elevador Vertical #4</div><div class="info"><div><span>Código</span><div class="code">Q-27</div></div><div><span>CCM</span>CCM-2</div></div></div>
+            <div class="card"><span class="badge">#21</span><div class="title">Banda Superior Vertical #4</div><div class="info"><div><span>Código</span><div class="code">Q-23</div></div><div><span>CCM</span>CCM-2</div></div></div>
+            <div class="card"><span class="badge">#22</span><div class="title">Botador Derecho Vertical #4</div><div class="info"><div><span>Código</span><div class="code">Q-18</div></div><div><span>CCM</span>CCM-2</div></div></div>
+            <div class="card"><span class="badge">#23</span><div class="title">Botador Izquierdo Vertical #4</div><div class="info"><div><span>Código</span><div class="code">Q-19</div></div><div><span>CCM</span>CCM-2</div></div></div>
+            <div class="card"><span class="badge">#24</span><div class="title">Banda Inferior Vertical #4</div><div class="info"><div><span>Código</span><div class="code">Q-11</div></div><div><span>CCM</span>CCM-2</div></div></div>
+            <div class="card"><span class="badge">#25</span><div class="title">Blower Vertical #4</div><div class="info"><div><span>Código</span><div class="code">B-04</div></div><div><span>CCM</span>CCM-2</div></div></div>
+          </div>
+        </details>
+
+        <details>
+          <summary><span class="sum-left"><span class="sum-text">Tren #1</span></span></summary>
+          <div class="grid">
+            <div class="card"><span class="badge">#1</span><div class="title">Elevador de Carga Tren #1</div><div class="info"><div><span>Código</span><div class="code">Q-6</div></div><div><span>CCM</span>CCM-2</div></div></div>
+            <div class="card"><span class="badge">#26</span><div class="title">Banda Cruzada Tren #1</div><div class="info"><div><span>Código</span><div class="code">Q-30</div></div><div><span>CCM</span>CCM-2</div></div></div>
+            <div class="card"><span class="badge">#27</span><div class="title">Banda de Envío Tren #1</div><div class="info"><div><span>Código</span><div class="code">Q-31</div></div><div><span>CCM</span>CCM-2</div></div></div>
+          </div>
+        </details>
+      </details>
+
+      <details>
+        <summary><span class="sum-left"><span>🔧</span><span class="sum-text">Motores Tren 2 (CCM-1)</span></span></summary>
+
+        <details>
+          <summary><span class="sum-left"><span class="sum-text">Vertical #5</span></span></summary>
+          <div class="grid">
+            <div class="card"><span class="badge">#29</span><div class="title">Elevador Vertical #5</div><div class="info"><div><span>Código</span><div class="code">Q-25</div></div><div><span>CCM</span>CCM-1</div></div></div>
+            <div class="card"><span class="badge">#30</span><div class="title">Banda Superior Vertical #5</div><div class="info"><div><span>Código</span><div class="code">Q-20</div></div><div><span>CCM</span>CCM-1</div></div></div>
+            <div class="card"><span class="badge">#31</span><div class="title">Botador Derecho Vertical #5</div><div class="info"><div><span>Código</span><div class="code">Q-13</div></div><div><span>CCM</span>CCM-1</div></div></div>
+            <div class="card"><span class="badge">#32</span><div class="title">Botador Izquierdo Vertical #5</div><div class="info"><div><span>Código</span><div class="code">Q-14</div></div><div><span>CCM</span>CCM-1</div></div></div>
+            <div class="card"><span class="badge">#33</span><div class="title">Banda Inferior Vertical #5</div><div class="info"><div><span>Código</span><div class="code">Q-9</div></div><div><span>CCM</span>CCM-1</div></div></div>
+            <div class="card"><span class="badge">#34</span><div class="title">Blower Vertical #5</div><div class="info"><div><span>Código</span><div class="code">B-05</div></div><div><span>CCM</span>CCM-1</div></div></div>
+          </div>
+        </details>
+
+        <details>
+          <summary><span class="sum-left"><span class="sum-text">Vertical #6</span></span></summary>
+          <div class="grid">
+            <div class="card"><span class="badge">#35</span><div class="title">Elevador Vertical #6</div><div class="info"><div><span>Código</span><div class="code">Q-26</div></div><div><span>CCM</span>CCM-1</div></div></div>
+            <div class="card"><span class="badge">#36</span><div class="title">Banda Superior Vertical #6</div><div class="info"><div><span>Código</span><div class="code">Q-22</div></div><div><span>CCM</span>CCM-1</div></div></div>
+            <div class="card"><span class="badge">#37</span><div class="title">Botador Derecho Vertical #6</div><div class="info"><div><span>Código</span><div class="code">Q-15</div></div><div><span>CCM</span>CCM-1</div></div></div>
+            <div class="card"><span class="badge">#38</span><div class="title">Botador Izquierdo Vertical #6</div><div class="info"><div><span>Código</span><div class="code">Q-16</div></div><div><span>CCM</span>CCM-1</div></div></div>
+            <div class="card"><span class="badge">#39</span><div class="title">Banda Inferior Vertical #6</div><div class="info"><div><span>Código</span><div class="code">Q-10</div></div><div><span>CCM</span>CCM-1</div></div></div>
+            <div class="card"><span class="badge">#40</span><div class="title">Blower Vertical #6</div><div class="info"><div><span>Código</span><div class="code">B-06</div></div><div><span>CCM</span>CCM-1</div></div></div>
+          </div>
+        </details>
+
+        <details>
+          <summary><span class="sum-left"><span class="sum-text">Vertical #7</span></span></summary>
+          <div class="grid">
+            <div class="card"><span class="badge">#41</span><div class="title">Elevador Vertical #7</div><div class="info"><div><span>Código</span><div class="code">Q-27</div></div><div><span>CCM</span>CCM-1</div></div></div>
+            <div class="card"><span class="badge">#42</span><div class="title">Banda Superior Vertical #7</div><div class="info"><div><span>Código</span><div class="code">Q-23</div></div><div><span>CCM</span>CCM-1</div></div></div>
+            <div class="card"><span class="badge">#43</span><div class="title">Botador Derecho Vertical #7</div><div class="info"><div><span>Código</span><div class="code">Q-17</div></div><div><span>CCM</span>CCM-1</div></div></div>
+            <div class="card"><span class="badge">#44</span><div class="title">Botador Izquierdo Vertical #7</div><div class="info"><div><span>Código</span><div class="code">Q-18</div></div><div><span>CCM</span>CCM-1</div></div></div>
+            <div class="card"><span class="badge">#45</span><div class="title">Banda Inferior Vertical #7</div><div class="info"><div><span>Código</span><div class="code">Q-11</div></div><div><span>CCM</span>CCM-1</div></div></div>
+            <div class="card"><span class="badge">#46</span><div class="title">Blower Vertical #7</div><div class="info"><div><span>Código</span><div class="code">B-07</div></div><div><span>CCM</span>CCM-1</div></div></div>
+          </div>
+        </details>
+
+        <details>
+          <summary><span class="sum-left"><span class="sum-text">Vertical #8</span></span></summary>
+          <div class="grid">
+            <div class="card"><span class="badge">#47</span><div class="title">Elevador Vertical #8</div><div class="info"><div><span>Código</span><div class="code">Q-28</div></div><div><span>CCM</span>CCM-1</div></div></div>
+            <div class="card"><span class="badge">#48</span><div class="title">Banda Superior Vertical #8</div><div class="info"><div><span>Código</span><div class="code">Q-24</div></div><div><span>CCM</span>CCM-1</div></div></div>
+            <div class="card"><span class="badge">#49</span><div class="title">Botador Derecho Vertical #8</div><div class="info"><div><span>Código</span><div class="code">Q-19</div></div><div><span>CCM</span>CCM-1</div></div></div>
+            <div class="card"><span class="badge">#50</span><div class="title">Botador Izquierdo Vertical #8</div><div class="info"><div><span>Código</span><div class="code">Q-20</div></div><div><span>CCM</span>CCM-1</div></div></div>
+            <div class="card"><span class="badge">#51</span><div class="title">Banda Inferior Vertical #8</div><div class="info"><div><span>Código</span><div class="code">Q-12</div></div><div><span>CCM</span>CCM-1</div></div></div>
+            <div class="card"><span class="badge">#52</span><div class="title">Blower Vertical #8</div><div class="info"><div><span>Código</span><div class="code">B-08</div></div><div><span>CCM</span>CCM-1</div></div></div>
+          </div>
+        </details>
+
+        <details>
+          <summary><span class="sum-left"><span class="sum-text">Tren #2</span></span></summary>
+          <div class="grid">
+            <div class="card"><span class="badge">#28</span><div class="title">Elevador de Carga Tren #2</div><div class="info"><div><span>Código</span><div class="code">Q-7</div></div><div><span>CCM</span>CCM-1</div></div></div>
+            <div class="card"><span class="badge">#53</span><div class="title">Banda Cruzada Tren #2</div><div class="info"><div><span>Código</span><div class="code">Q-33</div></div><div><span>CCM</span>CCM-1</div></div></div>
+            <div class="card"><span class="badge">#54</span><div class="title">Banda de Envío Tren #2</div><div class="info"><div><span>Código</span><div class="code">Q-34</div></div><div><span>CCM</span>CCM-1</div></div></div>
+          </div>
+        </details>
+      </details>
+
+      <details>
+        <summary><span class="sum-left"><span>🔥</span><span class="sum-text">Hornos Pre-Secado</span></span></summary>
+
+        <div class="grid">
+          <div class="card"><span class="badge">#55</span><div class="title">Extractor Humo Horno #4</div><div class="info"><div><span>Código</span><div class="code">E-4</div></div><div><span>CCM</span>CCM-2</div><div><span>Proceso</span>PRE-SECADO</div></div></div>
+          <div class="card"><span class="badge">#56</span><div class="title">Soplador de Cascarilla Horno #4</div><div class="info"><div><span>Código</span><div class="code">Q-28</div></div><div><span>CCM</span>CCM-2</div><div><span>Proceso</span>PRE-SECADO</div></div></div>
+          <div class="card"><span class="badge">#57</span><div class="title">Vibrador del Horno #4</div><div class="info"><div><span>Código</span><div class="code">Q-29</div></div><div><span>CCM</span>CCM-2</div><div><span>Proceso</span>PRE-SECADO</div></div></div>
+
+          <div class="card"><span class="badge">#58</span><div class="title">Extractor Humo Horno #5</div><div class="info"><div><span>Código</span><div class="code">E-5</div></div><div><span>CCM</span>CCM-1</div><div><span>Proceso</span>PRE-SECADO</div></div></div>
+          <div class="card"><span class="badge">#59</span><div class="title">Soplador de Cascarilla Horno #5</div><div class="info"><div><span>Código</span><div class="code">Q-30</div></div><div><span>CCM</span>CCM-1</div><div><span>Proceso</span>PRE-SECADO</div></div></div>
+          <div class="card"><span class="badge">#60</span><div class="title">Vibrador del Horno #5</div><div class="info"><div><span>Código</span><div class="code">Q-31</div></div><div><span>CCM</span>CCM-1</div><div><span>Proceso</span>PRE-SECADO</div></div></div>
+
+          <div class="card"><span class="badge">#61</span><div class="title">Extractor Humo Horno #6</div><div class="info"><div><span>Código</span><div class="code">E-6</div></div><div><span>CCM</span>CCM-1</div><div><span>Proceso</span>PRE-SECADO</div></div></div>
+          <div class="card"><span class="badge">#62</span><div class="title">Soplador de Cascarilla Horno #6</div><div class="info"><div><span>Código</span><div class="code">Q-29</div></div><div><span>CCM</span>CCM-1</div><div><span>Proceso</span>PRE-SECADO</div></div></div>
+          <div class="card"><span class="badge">#63</span><div class="title">Vibrador del Horno #6</div><div class="info"><div><span>Código</span><div class="code">Q-32</div></div><div><span>CCM</span>CCM-1</div><div><span>Proceso</span>PRE-SECADO</div></div></div>
+
+          <div class="card"><span class="badge">#64</span><div class="title">Banda Carga POA Tren #1</div><div class="info"><div><span>Código</span><div class="code">M-2</div></div><div><span>CCM</span>CCM-3</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#65</span><div class="title">Banda Carga POA Tren #2</div><div class="info"><div><span>Código</span><div class="code">M-4</div></div><div><span>CCM</span>CCM-2</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+        </div>
+      </details>
+
+    </details>
+
+    <!-- =========================
+         SECCIÓN PRINCIPAL 2
+    ========================== -->
+    <details>
+      <summary>
+        <span class="sum-left">
+          <span>🏁</span>
+          <span class="sum-text">Motores Secado Final</span>
+        </span>
+      </summary>
+
+      <details>
+        <summary><span class="sum-left"><span>🚆</span><span class="sum-text">SECADO FINAL · Tren #1</span></span></summary>
+        <div class="grid">
+          <div class="card"><span class="badge">#66</span><div class="title">Secadora # 1</div><div class="info"><div><span>Código</span><div class="code">M-22</div></div><div><span>CCM</span>CCM-4</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#67</span><div class="title">Blower Secadora #1</div><div class="info"><div><span>Código</span><div class="code">M-31</div></div><div><span>CCM</span>CCM-3</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+
+          <div class="card"><span class="badge">#68</span><div class="title">Secadora # 2</div><div class="info"><div><span>Código</span><div class="code">M-21</div></div><div><span>CCM</span>CCM-4</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#69</span><div class="title">Blower Secadora #2</div><div class="info"><div><span>Código</span><div class="code">M-30</div></div><div><span>CCM</span>CCM-4</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+
+          <div class="card"><span class="badge">#70</span><div class="title">Secadora # 3</div><div class="info"><div><span>Código</span><div class="code">M-20</div></div><div><span>CCM</span>CCM-4</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#71</span><div class="title">Blower Secadora #3</div><div class="info"><div><span>Código</span><div class="code">M-29</div></div><div><span>CCM</span>CCM-4</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+
+          <div class="card"><span class="badge">#72</span><div class="title">Secadora # 4</div><div class="info"><div><span>Código</span><div class="code">M-19</div></div><div><span>CCM</span>CCM-4</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#73</span><div class="title">Blower Secadora #4</div><div class="info"><div><span>Código</span><div class="code">M-28</div></div><div><span>CCM</span>CCM-4</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+
+          <div class="card"><span class="badge">#74</span><div class="title">Secadora # 5</div><div class="info"><div><span>Código</span><div class="code">M-18</div></div><div><span>CCM</span>CMM-3</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#75</span><div class="title">Blower Secadora #5</div><div class="info"><div><span>Código</span><div class="code">M-27</div></div><div><span>CCM</span>CCM-3</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+
+          <div class="card"><span class="badge">#76</span><div class="title">Secadora # 6</div><div class="info"><div><span>Código</span><div class="code">M-17</div></div><div><span>CCM</span>CCM-3</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#77</span><div class="title">Blower Secadora #6</div><div class="info"><div><span>Código</span><div class="code">M-26</div></div><div><span>CCM</span>CCM-3</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+
+          <div class="card"><span class="badge">#78</span><div class="title">Secadora # 7</div><div class="info"><div><span>Código</span><div class="code">M-16</div></div><div><span>CCM</span>CCM-3</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#79</span><div class="title">Blower Secadora #7</div><div class="info"><div><span>Código</span><div class="code">M-25</div></div><div><span>CCM</span>CCM-3</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+
+          <div class="card"><span class="badge">#80</span><div class="title">Secadora # 8</div><div class="info"><div><span>Código</span><div class="code">M-15</div></div><div><span>CCM</span>CCM-3</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#81</span><div class="title">Blower Secadora #8</div><div class="info"><div><span>Código</span><div class="code">M-24</div></div><div><span>CCM</span>CCM-3</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+
+          <div class="card"><span class="badge">#82</span><div class="title">Secadora # 9</div><div class="info"><div><span>Código</span><div class="code">M-14</div></div><div><span>CCM</span>CCM-3</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#83</span><div class="title">Blower Secadora #9</div><div class="info"><div><span>Código</span><div class="code">M-23</div></div><div><span>CCM</span>CCM-3</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+
+          <div class="card"><span class="badge">#84</span><div class="title">Banda inferior Tren #1</div><div class="info"><div><span>Código</span><div class="code">M-41</div></div><div><span>CCM</span>CCM-4</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+
+          <div class="card"><span class="badge">#85</span><div class="title">Elevador Descarga Tolva # 1</div><div class="info"><div><span>Código</span><div class="code">M-44</div></div><div><span>CCM</span>CCM-5</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#86</span><div class="title">Elevador Descarga Tolva # 2</div><div class="info"><div><span>Código</span><div class="code">M-44 .1</div></div><div><span>CCM</span>CCM-5</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+
+          <div class="card"><span class="badge">#87</span><div class="title">Abanico # 1</div><div class="info"><div><span>Código</span><div class="code">M-57</div></div><div><span>CCM</span>CCM-4</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#88</span><div class="title">Abanico # 2</div><div class="info"><div><span>Código</span><div class="code">M-54</div></div><div><span>CCM</span>CCM-5</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="sum-left"><span>🚆</span><span class="sum-text">SECADO FINAL · Tren #2</span></span></summary>
+        <div class="grid">
+          <div class="card"><span class="badge">#89</span><div class="title">Blower Secadora # 10</div><div class="info"><div><span>Código</span><div class="code">M-34</div></div><div><span>CCM</span>CCM-2</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#90</span><div class="title">Secadora # 10</div><div class="info"><div><span>Código</span><div class="code">M-13</div></div><div><span>CCM</span>CCM-2</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+
+          <div class="card"><span class="badge">#91</span><div class="title">Blower Secadora # 11</div><div class="info"><div><span>Código</span><div class="code">M-35</div></div><div><span>CCM</span>CCM-2</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#92</span><div class="title">Secadora # 11</div><div class="info"><div><span>Código</span><div class="code">M-12</div></div><div><span>CCM</span>CCM-2</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+
+          <div class="card"><span class="badge">#93</span><div class="title">Blower Secadora # 12</div><div class="info"><div><span>Código</span><div class="code">M-33</div></div><div><span>CCM</span>CCM-2</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#94</span><div class="title">Secadora # 12</div><div class="info"><div><span>Código</span><div class="code">M-11</div></div><div><span>CCM</span>CCM-2</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+
+          <div class="card"><span class="badge">#95</span><div class="title">Blower Secadora # 13</div><div class="info"><div><span>Código</span><div class="code">M-32</div></div><div><span>CCM</span>CCM-2</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#96</span><div class="title">Secadora # 13</div><div class="info"><div><span>Código</span><div class="code">M-10</div></div><div><span>CCM</span>CCM-2</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+
+          <div class="card"><span class="badge">#97</span><div class="title">Blower Secadora # 14</div><div class="info"><div><span>Código</span><div class="code">M-40</div></div><div><span>CCM</span>CCM-1</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#98</span><div class="title">Secadora # 14</div><div class="info"><div><span>Código</span><div class="code">M-9</div></div><div><span>CCM</span>CCM-1</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+
+          <div class="card"><span class="badge">#99</span><div class="title">Blower Secadora # 15</div><div class="info"><div><span>Código</span><div class="code">M-39</div></div><div><span>CCM</span>CCM-1</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#100</span><div class="title">Secadora # 15</div><div class="info"><div><span>Código</span><div class="code">M-8</div></div><div><span>CCM</span>CCM-1</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+
+          <div class="card"><span class="badge">#101</span><div class="title">Blower Secadora # 16</div><div class="info"><div><span>Código</span><div class="code">M-38</div></div><div><span>CCM</span>CCM-1</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#102</span><div class="title">Secadora # 16</div><div class="info"><div><span>Código</span><div class="code">M-7</div></div><div><span>CCM</span>CCM-1</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+
+          <div class="card"><span class="badge">#103</span><div class="title">Blower Secadora # 17</div><div class="info"><div><span>Código</span><div class="code">M-37</div></div><div><span>CCM</span>CCM-1</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#104</span><div class="title">Secadora # 17</div><div class="info"><div><span>Código</span><div class="code">M-6</div></div><div><span>CCM</span>CCM-1</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+
+          <div class="card"><span class="badge">#105</span><div class="title">Blower Secadora # 18</div><div class="info"><div><span>Código</span><div class="code">M-36</div></div><div><span>CCM</span>CCM-1</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#106</span><div class="title">Secadora # 18</div><div class="info"><div><span>Código</span><div class="code">M-5</div></div><div><span>CCM</span>CCM-1</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+
+          <div class="card"><span class="badge">#107</span><div class="title">Banda inferior Tren # 2</div><div class="info"><div><span>Código</span><div class="code">M-42</div></div><div><span>CCM</span>CCM-1</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+
+          <div class="card"><span class="badge">#108</span><div class="title">Elevador Descarga Tolva # 3</div><div class="info"><div><span>Código</span><div class="code">M-44</div></div><div><span>CCM</span>CCM-2</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#109</span><div class="title">Elevador Descarga # 4</div><div class="info"><div><span>Código</span><div class="code">M-43</div></div><div><span>CCM</span>CCM-2</div><div><span>Proceso</span>SECADO FINAL</div></div></div>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="sum-left"><span>🔥</span><span class="sum-text">HORNOS · Secado Final</span></span></summary>
+        <div class="grid">
+          <div class="card"><span class="badge">#110</span><div class="title">Extractor Humo Horno # 1</div><div class="info"><div><span>Código</span><div class="code">M-50</div></div><div><span>CCM</span>CCM-5</div><div><span>Proceso</span>HORNOS SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#111</span><div class="title">Soplador de Cascarilla Horno # 1</div><div class="info"><div><span>Código</span><div class="code">M-46</div></div><div><span>CCM</span>CCM-4</div><div><span>Proceso</span>HORNOS SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#112</span><div class="title">Vibrador del Horno # 1</div><div class="info"><div><span>Código</span><div class="code">—</div></div><div><span>CCM</span>—</div><div><span>Proceso</span>HORNOS SECADO FINAL</div></div></div>
+
+          <div class="card"><span class="badge">#113</span><div class="title">Extractor Humo Horno # 2</div><div class="info"><div><span>Código</span><div class="code">M-49</div></div><div><span>CCM</span>CCM-5</div><div><span>Proceso</span>HORNOS SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#114</span><div class="title">Soplador de Cascarilla Horno # 2</div><div class="info"><div><span>Código</span><div class="code">M-45</div></div><div><span>CCM</span>CCM-4</div><div><span>Proceso</span>HORNOS SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#115</span><div class="title">Vibrador del Horno # 2</div><div class="info"><div><span>Código</span><div class="code">—</div></div><div><span>CCM</span>—</div><div><span>Proceso</span>HORNOS SECADO FINAL</div></div></div>
+
+          <div class="card"><span class="badge">#116</span><div class="title">Extractor Humo Horno # 3</div><div class="info"><div><span>Código</span><div class="code">M-48</div></div><div><span>CCM</span>CCM-5</div><div><span>Proceso</span>HORNOS SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#117</span><div class="title">Soplador de Cascarilla Horno # 3</div><div class="info"><div><span>Código</span><div class="code">M-47</div></div><div><span>CCM</span>CCM-5</div><div><span>Proceso</span>HORNOS SECADO FINAL</div></div></div>
+          <div class="card"><span class="badge">#118</span><div class="title">Vibrador del Horno # 3</div><div class="info"><div><span>Código</span><div class="code">—</div></div><div><span>CCM</span>—</div><div><span>Proceso</span>HORNOS SECADO FINAL</div></div></div>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="sum-left"><span>➡️</span><span class="sum-text">BANDAS DE ENVÍO</span></span></summary>
+        <div class="grid">
+          <div class="card"><span class="badge">#119</span><div class="title">Banda interna Envío Almacén # 1</div><div class="info"><div><span>Código</span><div class="code">A-1</div></div><div><span>CCM</span>CCM-1</div><div><span>Proceso</span>ENVÍO</div></div></div>
+          <div class="card"><span class="badge">#120</span><div class="title">Banda interna Envío Almacén # 2</div><div class="info"><div><span>Código</span><div class="code">M-1 .F</div></div><div><span>CCM</span>CCM-2</div><div><span>Proceso</span>ENVÍO</div></div></div>
+          <div class="card"><span class="badge">#121</span><div class="title">Banda Externa Envío Almacén # 1</div><div class="info"><div><span>Código</span><div class="code">A-2</div></div><div><span>CCM</span>CCM-1</div><div><span>Proceso</span>ENVÍO</div></div></div>
+          <div class="card"><span class="badge">#122</span><div class="title">Banda Externa Envío Almacén # 2</div><div class="info"><div><span>Código</span><div class="code">M-1 .A</div></div><div><span>CCM</span>CCM-3</div><div><span>Proceso</span>ENVÍO</div></div></div>
+        </div>
+      </details>
+
+    </details>
+
+  </section>
+
+  <footer>
+ 
+  </footer>
+
+<a href="index.html" id="boton-flotante" class="boton-flotante">🏠 Inicio</a>
+
+<style>
+/* Estilo del botón flotante */
+.boton-flotante {
+  position: fixed;
+  bottom: 20px;               /* Distancia desde abajo */
+  right: 20px;                /* Distancia desde la derecha */
+  background-color: #007BFF;  /* Color azul */
+  color: white;
+  padding: 15px 20px;
+  border-radius: 50px;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 16px;
+  opacity: 0.7;               /* Transparencia inicial */
+  transition: opacity 0.3s, transform 0.3s;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  z-index: 1000;
+}
+
+.boton-flotante:hover {
+  opacity: 1;                 /* Opaco al pasar el mouse */
+  transform: scale(1.1);      /* Zoom sutil */
+}
+
+.boton-flotante.oculto {
+  opacity: 0;
+  transform: scale(0);
+  pointer-events: none;       /* No se puede clicar mientras desaparece */
+  transition: opacity 0.5s, transform 0.5s;
+}
+</style>
+
+  <!-- ✅ ACORDEÓN REAL (solo una llave abierta por nivel) -->
+  <script>
+    (function () {
+      document.addEventListener("toggle", function (e) {
+        const d = e.target;
+        if (!(d instanceof HTMLDetailsElement)) return;
+        if (!d.open) return;
+
+        const parentDetails = d.parentElement?.closest("details");
+        const container = parentDetails ? parentDetails : (document.querySelector("section") || document.body);
+
+        const siblings = Array.from(container.querySelectorAll(":scope > details"));
+        siblings.forEach((sib) => { if (sib !== d) sib.open = false; });
+      }, true);
+    })();
+  </script>
+</body>
+</html>

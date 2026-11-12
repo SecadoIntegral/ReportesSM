@@ -3,14 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Dashboard - Procesamiento</title>
+  <title>Secado Mecánico | Tablero operativo</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body data-page="dashboard">
 
 <div class="dashboard">
   <div class="header-controls">
-    <h1>Dashboard Secado Mecánico</h1>
+    <div class="page-heading">
+      <span class="eyebrow">REPORTE OPERATIVO</span>
+      <h1>Secado Mecánico</h1>
+      <p>Resumen diario de producción y control de humedad</p>
+    </div>
     <div class="controls">
       <div class="date-filter">
         <label for="date-select">Mostrar datos de:</label>
@@ -20,45 +24,153 @@
       </div>
       <button id="refresh-btn">Actualizar</button>
     </div>
+    <nav class="page-nav" aria-label="Navegación principal">
+      <a href="index.html" aria-current="page">Inicio</a>
+      <a href="metricas.html">Métricas OEE</a>
+      <a href="tiempos.html">Tiempos</a>
+      <a href="Motores.html">Motores</a>
+    </nav>
   </div>
   
   <p id="fecha"></p>
 
-  <!-- 🚀 NUEVAS TARJETAS PRINCIPALES -->
-  <div class="cards">
-
-    <div class="card" style="border-left:5px solid var(--primary);">
-      <h3>Total QQs</h3>
-      <div class="value-big" id="total-qss"></div>
-    </div>
-
-    <div class="card" style="border-left:5px solid var(--Moja);">
-      <h3>QQ Mojado</h3>
-      <div class="value-big" id="qq-mojado"></div>
-    </div>
-
-    <div class="card" style="border-left:5px solid var(--Hum);">
-  <h3>QQ Húmedo</h3>
-  <div class="value-big" id="qq-humedo"></div>
-</div>
-
-<div class="card" style="border-left:5px solid var(--Pre);">
-      <h3>QQ Ingresados Pre-Seco</h3>
-      <div class="value-big" id="qq-preseco"></div>
-    </div>
-
+  <div class="section-intro">
+    <span class="section-kicker">PRODUCCIÓN</span>
+    <h2>QQs procesados</h2>
+    <p>Consulta el total y su composición para el día seleccionado o para un periodo.</p>
   </div>
+
+  <!-- 💧 TARJETA DESTACADA: QQs Mojado Ingresados (con opción de sumar por rango de fechas) -->
+  <div class="card top-mojado-card">
+    <div class="top-mojado-main">
+      <div class="top-mojado-titles">
+        <div class="top-mojado-badge">
+          <span class="icon">📦</span>
+          <span class="badge-text" id="top-mojado-badge">Día seleccionado</span>
+        </div>
+        <h3>Total QQs</h3>
+        <p class="label" id="top-mojado-detail">Mostrando el total de quintales consolidado del día seleccionado en el filtro</p>
+      </div>
+
+      <div class="top-mojado-value-wrapper">
+        <div class="value-huge" id="top-mojado-valor">0.00</div>
+        <span class="unit-tag">QQs</span>
+      </div>
+    </div>
+
+    <!-- Controles para alternar entre día específico y rango para sumar -->
+    <div class="top-mojado-controls">
+      <div class="top-mojado-mode-switch">
+        <button type="button" id="btn-top-mojado-day" class="top-mojado-btn active">📅 Según filtro de fecha</button>
+        <button type="button" id="btn-top-mojado-range" class="top-mojado-btn">📆 Total por rango de fechas</button>
+      </div>
+
+      <!-- Panel de rango para sumar (oculto por defecto) -->
+      <div id="top-mojado-range-controls" class="top-mojado-range-controls" style="display: none;">
+        <div class="top-mojado-inputs-row">
+          <div class="top-mojado-field">
+            <label for="top-mojado-date-start">Desde:</label>
+            <input type="date" id="top-mojado-date-start" class="date-picker-input">
+          </div>
+          <div class="top-mojado-field">
+            <label for="top-mojado-date-end">Hasta:</label>
+            <input type="date" id="top-mojado-date-end" class="date-picker-input">
+          </div>
+          <button type="button" id="btn-top-mojado-calc" class="btn-primary-action btn-mojado-action">Consultar Total QQs</button>
+        </div>
+
+        <div class="top-mojado-shortcuts">
+          <span class="preset-label">Atajos de periodo:</span>
+          <button type="button" class="preset-chip" data-mojado-preset="7">Últimos 7 días</button>
+          <button type="button" class="preset-chip" data-mojado-preset="15">Últimos 15 días</button>
+          <button type="button" class="preset-chip" data-mojado-preset="30">Últimos 30 días</button>
+          <button type="button" class="preset-chip" data-mojado-preset="all">Todo el periodo</button>
+        </div>
+
+        <div id="top-mojado-summary-banner" class="range-info-banner" style="display: none; margin-top: 12px; margin-bottom: 0;"></div>
+      </div>
+    </div>
+
+    <div class="production-breakdown" aria-labelledby="production-chart-title">
+      <div class="production-breakdown-heading">
+        <div>
+          <span class="section-kicker">COMPOSICIÓN DE PRODUCCIÓN</span>
+          <h3 id="production-chart-title">Desglose de QQs</h3>
+        </div>
+        <span class="chart-unit">QQ</span>
+      </div>
+      <div class="production-chart" role="img" aria-label="Comparación de QQ Mojado, QQ Húmedo y QQ ingresados Pre-Seco">
+        <div class="production-chart-row">
+          <div class="production-chart-label"><span class="chart-dot wet"></span>QQ Mojado</div>
+          <div class="production-chart-track"><div class="production-chart-bar wet" id="bar-qq-mojado"></div></div>
+          <strong id="qq-mojado">--</strong>
+        </div>
+        <div class="production-chart-row">
+          <div class="production-chart-label"><span class="chart-dot humid"></span>QQ Húmedo</div>
+          <div class="production-chart-track"><div class="production-chart-bar humid" id="bar-qq-humedo"></div></div>
+          <strong id="qq-humedo">--</strong>
+        </div>
+        <div class="production-chart-row">
+          <div class="production-chart-label"><span class="chart-dot pre-dry"></span>QQ Ingresados Pre-Seco</div>
+          <div class="production-chart-track"><div class="production-chart-bar pre-dry" id="bar-qq-preseco"></div></div>
+          <strong id="qq-preseco">--</strong>
+        </div>
+        <div class="range-chart-axis"><span>0</span><span>QQ</span><span>Máximo del comparativo</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-intro compact-intro">
+    <span class="section-kicker">CALIDAD DEL PRODUCTO</span>
+    <h2>Control de humedad</h2>
+    <p>QQ y humedad promedio dentro y fuera del rango permitido.</p>
+  </div>
+
+  <section class="chart-panel" aria-labelledby="humidity-chart-title">
+    <div class="chart-heading">
+      <div>
+        <span class="section-kicker">CALIDAD DEL PRODUCTO</span>
+        <h2 id="humidity-chart-title">Humedad y cantidad por rango</h2>
+        <p>El pastel compara el volumen de café; la leyenda muestra la humedad promedio de cada rango.</p>
+      </div>
+      <span class="chart-unit">QQ y %</span>
+    </div>
+    <div class="humidity-pie-layout">
+      <div class="humidity-pie-visual">
+        <svg id="humidity-pie" viewBox="0 0 220 220" role="img" aria-label="Gráfico de pastel de cantidades dentro y fuera del rango de humedad">
+          <circle class="humidity-pie-track" cx="110" cy="110" r="94"></circle>
+          <path id="pie-segment-inside" class="humidity-pie-segment inside"></path>
+          <path id="pie-segment-outside" class="humidity-pie-segment outside"></path>
+        </svg>
+      </div>
+      <div class="humidity-pie-details">
+        <div class="humidity-pie-total"><strong id="humidity-pie-total">--</strong><span>QQ totales analizados</span></div>
+        <div class="humidity-pie-legend" aria-label="Leyenda de humedad">
+          <div class="humidity-legend-item">
+            <span class="chart-dot in-range"></span>
+            <div class="humidity-legend-copy"><strong>Humedad dentro del rango</strong><span>Promedio: <b><span id="humedad-promedio-dentro">--</span>%</b></span></div>
+            <div class="humidity-legend-amount"><strong id="cantidad-qq-dentro">--</strong><span>QQ</span></div>
+          </div>
+          <div class="humidity-legend-item">
+            <span class="chart-dot out-range"></span>
+            <div class="humidity-legend-copy"><strong>Humedad fuera del rango</strong><span>Promedio: <b><span id="humedad-promedio-fuera">--</span>%</b></span></div>
+            <div class="humidity-legend-amount"><strong id="cantidad-qq-fuera">--</strong><span>QQ</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- TARJETAS RESTANTES -->
   <div class="cards">
 
-    <div class="card" style="border-left:5px solid var(--secondary);">
+    <div class="card oculto" style="border-left:5px solid var(--secondary);">
       <h3>Secadoras en Proceso</h3>
       <div class="row"><span class="label">Secadoras:</span><span class="value" id="sec-proceso"></span></div>
       <div class="row"><span class="label">QQ Proceso:</span><span class="value" id="qq-proceso"></span></div>
     </div>
 
-    <div class="card" style="border-left:5px solid var(--secondary);">
+    <div class="card oculto" style="border-left:5px solid var(--secondary);">
     <h3>Verticales en Proceso</h3>
       <div class="row"><span class="label">Verticales:</span><span class="value" id="vert-proceso"></span></div>
       <div class="row"><span class="label">QQ Verticales:</span><span class="value" id="qq-vert-proceso"></span></div>
@@ -80,60 +192,30 @@
 
   <div id="loading">Cargando datos...</div>
 
-</div>
-
-<!-- Segundo Dashboard -->
-
-<!-- TABLA -->
-<div class="table-container">
-  <h2>Métricas de Proceso</h2>
-  <div class="dashboard">
-    <!-- BOTÓN / SELECTOR DE FECHAS -->
-    <div class="top-right">
-      <select id="dateSelector" class="date-select">
-        <option value="">Cargando...</option>
-      </select>
-    </div>
-    <div id="loading-message" class="loading">Cargando datos...</div>
-    <table style="display: none;">
-      <thead>
-        <tr>
-          <th>Métrica</th>
-          <th>Valor</th>
-          <th>Estado</th>
-        </tr>
-      </thead>
-      <tbody id="tabla-body"></tbody>
-    </table>
-
-    <!-- TARJETAS KPI -->
-     <!-- AQUÍ VA EL DATO NUEVO: QQs Mojado ingresados (debajo de KPIs) -->
-    <div id="kpi-extra" class="kpi-extra">
-      <span class="label">QQs Mojado ingresados</span>
-      <div class="value" id="kpi-qqs-mojado">--</div>
-    </div>
-    <div class="kpi-container">
-      <div class="kpi-card">
-        <div id="kpi-disponibilidad" class="kpi-value" style="color: var(--warning);">--%</div>
-        <div class="kpi-label">Disponibilidad</div>
+  <section class="chart-panel daily-trend-panel" aria-labelledby="daily-trend-title">
+    <div class="chart-heading trend-heading">
+      <div>
+        <span class="section-kicker">HISTÓRICO DE INGRESOS</span>
+        <h2 id="daily-trend-title">QQs de café que ingresaron</h2>
+        <p>Identifica los días y periodos con mayor ingreso de café.</p>
       </div>
-
-      <div class="kpi-card">
-        <div id="kpi-desempeño" class="kpi-value" style="color: var(--danger);">--%</div>
-        <div class="kpi-label">Desempeño</div>
-      </div>
-
-      <div class="kpi-card">
-        <div id="kpi-calidad" class="kpi-value" style="color: var(--secondary);">--%</div>
-        <div class="kpi-label">Calidad</div>
-      </div>
-
-      <div class="kpi-card">
-        <div id="kpi-oee" class="kpi-value" style="color: var(--danger);">--%</div>
-        <div class="kpi-label">OEE</div>
+      <div class="trend-period-filter" role="group" aria-label="Agrupar gráfico por periodo">
+        <button type="button" class="trend-period-btn active" data-trend-period="day" aria-pressed="true">Diario</button>
+        <button type="button" class="trend-period-btn" data-trend-period="week" aria-pressed="false">Semanal</button>
+        <button type="button" class="trend-period-btn" data-trend-period="month" aria-pressed="false">Mensual</button>
+        <button type="button" class="trend-period-btn" data-trend-period="year" aria-pressed="false">Anual</button>
       </div>
     </div>
-  </div>
+    <div class="trend-summary">
+      <span id="trend-period-label">Vista diaria · todos los registros</span>
+      <strong id="trend-total">Total: -- QQ</strong>
+    </div>
+    <div class="trend-chart-viewport" tabindex="0" aria-label="Gráfico histórico; desplázate horizontalmente para ver todos los periodos">
+      <div id="daily-chart-bars" class="daily-chart-bars" role="img" aria-label="Gráfico de QQs ingresados por periodo"></div>
+    </div>
+    <div id="daily-chart-empty" class="trend-empty" hidden>No hay registros con fecha y Total QQs para mostrar.</div>
+  </section>
+
 </div>
 
 <script src="script.js"></script>
@@ -142,3 +224,4 @@
 <a href="Motores.html" id="boton-flotante-Motores" class="boton-flotante-Motores">⚙️ Motores</a>
 </body>
 </html>
+

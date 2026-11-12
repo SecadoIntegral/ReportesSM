@@ -11,13 +11,13 @@
       --bg:#f4f6fb;
       --card:#ffffff;
       --card2:#f8fafc;
-      --primary:#2563eb;
-      --accent:#0ea5e9;
-      --secondary:#16a34a;
+      --primary:#860062;
+      --accent:#f78c2a;
+      --secondary:#f78c2a;
       --text:#111827;
       --muted:#6b7280;
       --stroke: rgba(0,0,0,.10);
-      --stroke2: rgba(37,99,235,.18);
+      --stroke2: rgba(134,0,98,.18);
 
       --radius:18px;
       --shadow:0 10px 22px rgba(17,24,39,.08);
@@ -45,8 +45,24 @@
       margin-bottom:16px;
     }
 
+    header{
+      position:sticky;
+      top:-16px;
+      z-index:100;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      gap:8px 16px;
+      margin:0 -16px 16px;
+      padding:8px 16px;
+      border-radius:0 0 14px 14px;
+      background:#fff;
+      box-shadow:0 5px 18px rgba(53,38,56,.10);
+    }
+
     header h1{
-      font-size:1.45rem;
+      font-size:1.15rem;
       font-weight:800;
       letter-spacing:.2px;
     }
@@ -68,7 +84,7 @@
       min-height:var(--tap);
       padding:14px 14px;
       border-radius:16px;
-      background:linear-gradient(180deg,#ffffff,#eef2ff);
+      background:linear-gradient(180deg,#ffffff,#f8f1f7);
       border:1px solid var(--stroke);
       box-shadow:var(--shadow);
 
@@ -268,7 +284,12 @@ details.machine > summary{
   touch-action:manipulation;
 }
 
-  </style>
+      header p{display:none;}
+    header nav{margin-top:0!important;justify-content:flex-end!important;flex-wrap:wrap;gap:6px!important;}
+    header nav a{background:#860062!important;color:#fff!important;}
+    header nav a:hover,header nav a[aria-current="page"]{background:#f78c2a!important;border-color:#f78c2a!important;color:#860062!important;}
+    header nav a{padding:6px 10px!important;}
+    @media(max-width:700px){header{justify-content:center;}header nav{width:100%;justify-content:center!important;}}</style>
 </head>
 <script>
   // Cerrar TODAS las pestañas al cargar
@@ -296,6 +317,12 @@ details.machine > summary{
   <header>
     <h1>Vista Operacional</h1>
     <p>· Motores / Hornos / Bandas</p>
+    <nav aria-label="Navegación principal" style="display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:16px;">
+      <a href="index.html" style="padding:8px 14px;border-radius:999px;background:#f4eaf2;color:#6b1455;text-decoration:none;font-weight:600;">Inicio</a>
+      <a href="metricas.html" style="padding:8px 14px;border-radius:999px;background:#f4eaf2;color:#6b1455;text-decoration:none;font-weight:600;">Métricas OEE</a>
+      <a href="tiempos.html" style="padding:8px 14px;border-radius:999px;background:#f4eaf2;color:#6b1455;text-decoration:none;font-weight:600;">Tiempos</a>
+      <a href="Motores.html" aria-current="page" style="padding:8px 14px;border-radius:999px;background:#860062;color:#fff;text-decoration:none;font-weight:600;">Motores</a>
+    </nav>
   </header>
 
   <section>
@@ -589,7 +616,7 @@ details.machine > summary{
   position: fixed;
   bottom: 20px;               /* Distancia desde abajo */
   right: 20px;                /* Distancia desde la derecha */
-  background-color: #007BFF;  /* Color azul */
+  background-color: #860062;  /* Color azul */
   color: white;
   padding: 15px 20px;
   border-radius: 50px;
@@ -633,3 +660,4 @@ details.machine > summary{
   </script>
 </body>
 </html>
+

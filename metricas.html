@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Métricas de Proceso y OEE</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="metrics">
+  <main class="dashboard page-shell">
+    <header class="page-header">
+      <div class="page-heading">
+        <span class="eyebrow">REPORTE OPERATIVO</span>
+        <h1>Métricas de Proceso y OEE</h1>
+        <p>Disponibilidad, desempeño y calidad del proceso</p>
+      </div>
+      <nav class="page-nav" aria-label="Navegación principal">
+        <a href="index.html">Inicio</a>
+        <a href="metricas.html" aria-current="page">Métricas OEE</a>
+        <a href="tiempos.html">Tiempos</a>
+        <a href="Motores.html">Motores</a>
+      </nav>
+      <button id="refresh-btn" class="refresh-action" type="button">Actualizar métricas</button>
+    </header>
+  
+
+<!-- TABLA -->
+<div class="table-container">
+  <div class="metrics-header">
+    <h2>Indicadores operativos</h2>
+  </div>
+  <div class="dashboard">
+    <!-- BOTÓN / SELECTOR DE FECHAS -->
+    <!-- PANEL DE CONTROL / SELECTOR DE MODO Y FECHAS -->
+    <div class="filter-controls-container">
+      <div class="mode-switch-wrapper">
+        <button type="button" id="btn-mode-single" class="mode-tab-btn active">📅 Día Único</button>
+        <button type="button" id="btn-mode-range" class="mode-tab-btn">📆 Rango de Días</button>
+      </div>
+
+      <!-- Selector para Día Único -->
+      <div id="single-date-box" class="date-control-box">
+        <label for="dateSelector">Seleccionar fecha:</label>
+        <select id="dateSelector" class="date-select">
+          <option value="">Cargando fechas...</option>
+        </select>
+      </div>
+
+      <!-- Selector para Rango de Días -->
+      <div id="range-date-box" class="date-control-box range-box" style="display: none;">
+        <div class="range-inputs-group">
+          <div class="date-field">
+            <label for="range-start">Desde:</label>
+            <input type="date" id="range-start" class="date-picker-input">
+          </div>
+          <div class="date-field">
+            <label for="range-end">Hasta:</label>
+            <input type="date" id="range-end" class="date-picker-input">
+          </div>
+          <button type="button" id="btn-apply-range" class="btn-primary-action">Calcular Rango</button>
+        </div>
+        <div class="range-presets-group">
+          <span class="preset-label">Atajos rápidos:</span>
+          <button type="button" class="preset-chip" data-preset="7">Últimos 7 días</button>
+          <button type="button" class="preset-chip" data-preset="15">Últimos 15 días</button>
+          <button type="button" class="preset-chip" data-preset="30">Últimos 30 días</button>
+          <button type="button" class="preset-chip" data-preset="all">Todo el periodo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Banner informativo de rango -->
+    <div id="range-info-banner" class="range-info-banner" style="display: none;"></div>
+
+    <div id="loading-message" class="loading">Cargando datos...</div>
+    <h3 id="tabla-metricas-titulo" style="margin-top: 20px; margin-bottom: 10px; color: var(--dark); font-size: 16px;">Métricas Operativas</h3>
+    <table style="display: none;">
+      <thead>
+        <tr>
+          <th>Métrica</th>
+          <th>Valor</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-body"></tbody>
+    </table>
+
+    <!-- TARJETAS KPI -->
+    <div class="kpi-container">
+      <div class="kpi-card">
+        <div id="kpi-disponibilidad" class="kpi-value" style="color: var(--warning);">--%</div>
+        <div class="kpi-label">Disponibilidad</div>
+        <div id="kpi-disponibilidad-sub" class="kpi-subtext" style="display: none;"></div>
+      </div>
+
+      <div class="kpi-card">
+        <div id="kpi-desempeño" class="kpi-value" style="color: var(--danger);">--%</div>
+        <div class="kpi-label">Desempeño</div>
+        <div id="kpi-desempeño-sub" class="kpi-subtext" style="display: none;"></div>
+      </div>
+
+      <div class="kpi-card">
+        <div id="kpi-calidad" class="kpi-value" style="color: var(--secondary);">--%</div>
+        <div class="kpi-label">Calidad</div>
+        <div id="kpi-calidad-sub" class="kpi-subtext" style="display: none;"></div>
+      </div>
+
+      <div class="kpi-card">
+        <div id="kpi-oee" class="kpi-value" style="color: var(--danger);">--%</div>
+        <div class="kpi-label">OEE</div>
+        <div id="kpi-oee-sub" class="kpi-subtext" style="display: none;"></div>
+      </div>
+    </div>
+
+    <!-- DESGLOSE DÍA A DÍA EN EL RANGO (visible solo en modo rango) -->
+    <div id="range-breakdown-section" class="breakdown-section" style="display: none;">
+      <h3 style="margin-top: 10px; margin-bottom: 12px; color: var(--dark); font-size: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <span>📋 Desglose Diario en el Rango</span>
+        <span id="breakdown-total-days" style="font-size: 13px; font-weight: normal; color: var(--gray);"></span>
+      </h3>
+      <div class="table-responsive">
+        <table class="breakdown-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Turnos</th>
+              <th>Tiempo Operativo</th>
+              <th>QQs Secado (OEE)</th>
+              <th>Disponibilidad</th>
+              <th>Desempeño</th>
+              <th>Calidad</th>
+              <th>OEE</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="breakdown-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+  </main>
+
+<script src="script.js"></script>
+</body>
+</html>
+

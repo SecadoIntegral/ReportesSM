@@ -626,7 +626,7 @@ function renderDailyTrendChart() {
     const labels = { day: "diaria", week: "semanal", month: "mensual", year: "anual" };
     periodLabel.textContent = `Vista ${labels[trendGranularity]} · ${entries.length} ${trendGranularity === "day" ? "días" : "periodos"}`;
   }
-  chart.style.minWidth = `${Math.max(100, entries.length * 54)}px`;
+  chart.style.minWidth = `${Math.max(100, entries.length * 72)}px`;
   chart.setAttribute("aria-label", `Gráfico ${trendGranularity === "day" ? "diario" : trendGranularity === "week" ? "semanal" : trendGranularity === "month" ? "mensual" : "anual"} con ${entries.length} periodos y ${total.toFixed(2)} QQ en total.`);
 
   entries.forEach((entry, index) => {
@@ -635,7 +635,11 @@ function renderDailyTrendChart() {
     column.title = `${entry.title}: ${entry.value.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} QQ`;
     const value = document.createElement("span");
     value.className = "trend-bar-value";
-    value.textContent = entry.value.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const qqValue = document.createElement("span");
+    qqValue.textContent = `${entry.value.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} QQ`;
+    const capacityValue = document.createElement("span");
+    capacityValue.textContent = `${(entry.value / 7000 * 100).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% capacidad`;
+    value.append(qqValue, capacityValue);
     const bar = document.createElement("div");
     bar.className = `trend-bar${entry.value === maximum && maximum > 0 ? " peak" : ""}`;
     bar.style.height = `${maximum > 0 ? Math.max(2, entry.value / maximum * 100) : 0}%`;
@@ -647,6 +651,9 @@ function renderDailyTrendChart() {
     label.textContent = entry.label;
     column.append(value, plot, label);
     chart.appendChild(column);
+    const plotHeight = Math.max(0, column.clientHeight - 43);
+    const barHeight = maximum > 0 ? Math.max(2, entry.value / maximum * plotHeight) : 2;
+    value.style.bottom = `${15 + barHeight + 2}px`;
   });
 
   if (entries.length > 1) {

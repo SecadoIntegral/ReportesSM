@@ -247,23 +247,34 @@ function getSheetColumnValue(row, columnName) {
   return key ? row[key] : "";
 }
 
+function parseLocaleNumber(stringNumber) {
+  if (stringNumber === null || stringNumber === undefined || stringNumber === "") return 0;
+  if (typeof stringNumber === "number") return isNaN(stringNumber) ? 0 : stringNumber;
+  let text = stringNumber.toString().trim();
+  if (!text) return 0;
+  if (text.includes(",") && text.includes(".")) {
+    text = text.lastIndexOf(",") > text.lastIndexOf(".")
+      ? text.replace(/\./g, "").replace(",", ".")
+      : text.replace(/,/g, "");
+  } else if (text.includes(",")) {
+    if (/^-?\d{1,3}(,\d{3})+$/.test(text)) {
+      text = text.replace(/,/g, "");
+    } else {
+      text = text.replace(",", ".");
+    }
+  }
+  const n = parseFloat(text);
+  return isNaN(n) ? 0 : n;
+}
+
 function fmt(value, isSecadoras = false) {
   if (isSecadoras) {
-    if (value === null || value === undefined) return "";
-    const num = Number(value);
-    if (isNaN(num)) return value.toString().trim();
+    if (value === null || value === undefined || value === "") return "";
+    const num = parseLocaleNumber(value);
     return Math.round(num).toString();
   }
-  let numericText = (value || "0").toString().trim();
-  if (numericText.includes(",") && numericText.includes(".")) {
-    numericText = numericText.lastIndexOf(",") > numericText.lastIndexOf(".")
-      ? numericText.replace(/\./g, "").replace(",", ".")
-      : numericText.replace(/,/g, "");
-  } else {
-    numericText = numericText.replace(",", ".");
-  }
-  const n = Number(numericText);
-  return isNaN(n) ? "0.00" : n.toFixed(2);
+  const n = parseLocaleNumber(value);
+  return n.toFixed(2);
 }
 
 function parseTimeToHours(valor) {
@@ -281,7 +292,11 @@ function parseTimeToHours(valor) {
   }
 
   const num = parseFloat(valor.replace(",", "."));
-  return !isNaN(num) ? num : 0;
+  if (isNaN(num)) return 0;
+  if (num > 0 && num < 1) {
+    return num * 24;
+  }
+  return num;
 }
 
 function formatHoursToTime(totalHours) {
@@ -294,46 +309,34 @@ function formatHoursToTime(totalHours) {
 }
 
 function formatHoras(valor) {
-  if (!valor || valor === "") return "00:00:00";
+  if (!valor || valor === "" || valor === "0" || valor === 0) return "00:00:00";
   valor = valor.toString().trim();
   if (/^\d+:\d{2}:\d{2}$/.test(valor)) return valor;
   if (/^\d+:\d{1,2}$/.test(valor)) {
     let [h, m] = valor.split(":").map(n => parseInt(n, 10) || 0);
     return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0") + ":00";
   }
-  if (/^\d+\.\d+$/.test(valor)) {
-    let num = parseFloat(valor);
-    if (!isNaN(num)) {
-      let hours = Math.floor(num * 24);
-      let minutes = Math.round(((num * 24) - hours) * 60);
-      return String(hours).padStart(2, "0") + ":" + String(minutes).padStart(2, "0") + ":00";
-    }
-  }
-  let num = parseFloat(valor);
-  if (!isNaN(num)) {
-    let hours = Math.floor(num);
-    let minutes = Math.round((num - hours) * 60);
-    return String(hours).padStart(2, "0") + ":" + String(minutes).padStart(2, "0") + ":00";
-  }
-  return "00:00:00";
-}
-
-function formatPercent(valor) {
-  if (valor === null || valor === undefined || valor === "") return "--%";
-  valor = valor.toString().replace("%", "").replace(",", ".").trim();
-  let num = parseFloat(valor);
-  if (isNaN(num)) return "--%";
-  if (num <= 1 && num > 0) num = num * 100;
-  return num.toFixed(2) + "%";
+  const totalHours = parseTimeToHours(valor);
+  return formatHoursToTime(totalHours);
 }
 
 function parsePercent(valor) {
   if (valor === null || valor === undefined || valor === "") return 0;
-  valor = valor.toString().replace("%", "").replace(",", ".").trim();
-  let num = parseFloat(valor);
+  const str = valor.toString().trim();
+  const hasPercent = str.includes("%");
+  const cleanStr = str.replace("%", "").replace(",", ".").trim();
+  let num = parseFloat(cleanStr);
   if (isNaN(num)) return 0;
-  if (num > 0 && num <= 1) num = num * 100;
+  if (!hasPercent && num > 0 && num <= 1) {
+    num = num * 100;
+  }
   return num;
+}
+
+function formatPercent(valor) {
+  if (valor === null || valor === undefined || valor === "") return "--%";
+  const p = parsePercent(valor);
+  return p.toFixed(2) + "%";
 }
 
 function getOeeBadgeHtml(valPercent) {
@@ -637,8 +640,19 @@ function renderDailyTrendChart() {
     value.className = "trend-bar-value";
     const qqValue = document.createElement("span");
     qqValue.textContent = `${entry.value.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} QQ`;
+    let periodCapacity = 7000;
+    if (trendGranularity === "week") {
+      periodCapacity = 7000 * 7;
+    } else if (trendGranularity === "month") {
+      const daysInMonth = new Date(entry.date.getFullYear(), entry.date.getMonth() + 1, 0).getDate();
+      periodCapacity = 7000 * daysInMonth;
+    } else if (trendGranularity === "year") {
+      const isLeap = y => (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
+      periodCapacity = 7000 * (isLeap(entry.date.getFullYear()) ? 366 : 365);
+    }
+    const capPercent = periodCapacity > 0 ? (entry.value / periodCapacity * 100) : 0;
     const capacityValue = document.createElement("span");
-    capacityValue.textContent = `${(entry.value / 7000 * 100).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% capacidad`;
+    capacityValue.textContent = `${capPercent.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}% capacidad`;
     value.append(qqValue, capacityValue);
     const bar = document.createElement("div");
     bar.className = `trend-bar${entry.value === maximum && maximum > 0 ? " peak" : ""}`;
@@ -822,12 +836,12 @@ function updateTopMojadoForDate(fechaTarget) {
     fechaLabel = row.Fecha;
     const totalKey = ["Total QQs", "Total Qss", "Total QQ"].find(k => k in row);
     const rawVal = totalKey ? row[totalKey] : 0;
-    valor = parseFloat(("" + rawVal).replace(",", ".")) || 0;
+    valor = parseLocaleNumber(rawVal);
 
     const mojKey = ["qq mojado", "QQ Mojado", "QQs Mojado"].find(k => k in row);
     const humKey = ["qq humedo", "QQ Humedo", "QQs Humedo"].find(k => k in row);
-    const mojVal = parseFloat(("" + (row[mojKey] || 0)).replace(",", ".")) || 0;
-    const humVal = parseFloat(("" + (row[humKey] || 0)).replace(",", ".")) || 0;
+    const mojVal = parseLocaleNumber(row[mojKey] || 0);
+    const humVal = parseLocaleNumber(row[humKey] || 0);
 
     valEl.textContent = valor.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     if (desc) {
@@ -848,7 +862,7 @@ function updateTopMojadoForDate(fechaTarget) {
     }
     if (item) {
       fechaLabel = item.dateStr;
-      valor = parseFloat(item.row[colIndices.qqsMojadoEntrados]) || parseFloat(item.row[colIndices.qqsMojadoIngresados]) || 0;
+      valor = parseLocaleNumber(item.row[colIndices.qqsMojadoEntrados]) || parseLocaleNumber(item.row[colIndices.qqsMojadoIngresados]);
     }
   }
 
@@ -887,7 +901,7 @@ function calculateTopMojadoRange() {
   let end = parseFecha(endInput.value);
   if (!start || !end) return;
   if (start > end) [start, end] = [end, start];
-  const parseNumber = value => parseFloat(fmt(value)) || 0;
+  const parseNumber = value => parseLocaleNumber(value);
   const totalSumKey = ["Total QQs", "Total Qss", "Total QQ"];
   const productionTotals = [
     { id: "qq-mojado", keys: ["QQs Mojado ingresados", "qq mojado", "QQ Mojado", "QQs Mojado"] },
@@ -1279,7 +1293,7 @@ function applyCurrentRange() {
     if (banner) {
       banner.className = "range-info-banner warning";
       banner.style.display = "flex";
-      banner.innerHTML = `⚠️ No se encontraron registros de datos entre <strong>${formatFechaDisplay(s)}</strong> y <strong>${formatFechaDisplay(e)}</strong>.`;
+      banner.innerHTML = `No se encontraron registros de datos entre <strong>${formatFechaDisplay(s)}</strong> y <strong>${formatFechaDisplay(e)}</strong>.`;
     }
     resetKpisToEmpty();
     return;
@@ -1300,6 +1314,7 @@ function calculateAndRenderOeeRange(rowsList, startDate, endDate) {
 
   let sumWeightedDesempeno = 0;
   let sumWeightedCalidad = 0;
+  let totalWeightCalidad = 0;
   let sumOee = 0;
   let sumDisp = 0;
 
@@ -1314,9 +1329,9 @@ function calculateAndRenderOeeRange(rowsList, startDate, endDate) {
     const parosNoProgH = parseTimeToHours(getVal(colIndices.parosNoProgramados));
     const tiempoTotalH = parseTimeToHours(getVal(colIndices.tiempoTotal));
     const tiempoMuertoH = parseTimeToHours(getVal(colIndices.tiempoMuerto));
-    const qqsMojado = parseFloat(getVal(colIndices.qqsMojadoIngresados)) || 0;
-    const qqsEntrados = parseFloat(getVal(colIndices.qqsMojadoEntrados)) || 0;
-    const procesados = parseFloat(getVal(colIndices.procesados)) || 0;
+    const qqsMojado = parseLocaleNumber(getVal(colIndices.qqsMojadoIngresados));
+    const qqsEntrados = parseLocaleNumber(getVal(colIndices.qqsMojadoEntrados));
+    const procesados = parseLocaleNumber(getVal(colIndices.procesados));
 
     const disp = parsePercent(getVal(colIndices.disponibilidad));
     const desemp = parsePercent(getVal(colIndices.desempeno));
@@ -1333,7 +1348,10 @@ function calculateAndRenderOeeRange(rowsList, startDate, endDate) {
     totalProcesados += procesados;
 
     sumWeightedDesempeno += desemp * tiempoTotalH;
-    sumWeightedCalidad += cal * (qqsMojado > 0 ? qqsMojado : 1);
+    if (qqsMojado > 0) {
+      sumWeightedCalidad += cal * qqsMojado;
+      totalWeightCalidad += qqsMojado;
+    }
     sumOee += oee;
     sumDisp += disp;
 
@@ -1350,19 +1368,18 @@ function calculateAndRenderOeeRange(rowsList, startDate, endDate) {
   });
 
   const N = rowsList.length;
-  const dispRange = totalTurnos > 0 ? (totalTiempoTotal / totalTurnos) * 100 : (sumDisp / N);
-  const desempRange = totalTiempoTotal > 0 ? (sumWeightedDesempeno / totalTiempoTotal) : (sumWeightedDesempeno / (N || 1));
-  const totalWeightCalidad = rowsList.reduce((acc, it) => acc + (parseFloat(it.row[colIndices.qqsMojadoIngresados]) > 0 ? parseFloat(it.row[colIndices.qqsMojadoIngresados]) : 1), 0);
-  const calRange = totalWeightCalidad > 0 ? (sumWeightedCalidad / totalWeightCalidad) : 100;
+  const dispRange = totalTurnos > 0 ? (totalTiempoTotal / totalTurnos) * 100 : (N > 0 ? sumDisp / N : 0);
+  const desempRange = totalTiempoTotal > 0 ? (sumWeightedDesempeno / totalTiempoTotal) : (N > 0 ? sumWeightedDesempeno / N : 0);
+  const calRange = totalWeightCalidad > 0 ? (sumWeightedCalidad / totalWeightCalidad) : (N > 0 ? sumDisp / N : 100);
   const oeeRange = (dispRange / 100) * (desempRange / 100) * (calRange / 100) * 100;
-  const oeeAvg = sumOee / N;
+  const oeeAvg = N > 0 ? sumOee / N : 0;
 
   const banner = document.getElementById("range-info-banner");
   if (banner) {
     banner.className = "range-info-banner";
     banner.style.display = "flex";
     banner.innerHTML = `
-      <span>📊 Consolidado del <strong>${formatFechaDisplay(startDate)}</strong> al <strong>${formatFechaDisplay(endDate)}</strong> (${N} día${N > 1 ? "s" : ""} evaluado${N > 1 ? "s" : ""})</span>
+      <span>Consolidado del <strong>${formatFechaDisplay(startDate)}</strong> al <strong>${formatFechaDisplay(endDate)}</strong> (${N} día${N > 1 ? "s" : ""} evaluado${N > 1 ? "s" : ""})</span>
       <span style="font-size: 13px; font-weight: 600;">OEE Ponderado: ${oeeRange.toFixed(2)}%</span>
     `;
   }
@@ -1515,29 +1532,6 @@ document.addEventListener("DOMContentLoaded", function () {
   if (dateSelect) {
     dateSelect.addEventListener("change", function () {
       updateDashboard(allData, this.value);
-    });
-  }
-
-  // Animaciones para botones flotantes
-  const botonTiempos = document.getElementById("boton-flotante");
-  if (botonTiempos) {
-    botonTiempos.addEventListener("click", function (e) {
-      e.preventDefault();
-      botonTiempos.classList.add("oculto");
-      setTimeout(() => {
-        window.location.href = botonTiempos.href;
-      }, 500);
-    });
-  }
-
-  const botonMotores = document.getElementById("boton-flotante-Motores");
-  if (botonMotores) {
-    botonMotores.addEventListener("click", function (e) {
-      e.preventDefault();
-      botonMotores.classList.add("oculto");
-      setTimeout(() => {
-        window.location.href = botonMotores.href;
-      }, 500);
     });
   }
 });

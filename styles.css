@@ -1,3 +1,15 @@
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
 :root {
   --primary: #860062;
   --secondary: #3cff00;
@@ -322,65 +334,7 @@ tr:hover {
   display: none !important;
 }
 
-  .boton-flotante {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background-color: #ff5722;
-    color: white;
-    padding: 15px 20px;
-    border-radius: 50px;
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 16px;
-    opacity: 0.7;              /* Transparencia inicial */
-    transition: opacity 0.3s, transform 0.3s;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    z-index: 1000;
-  }
-
-  .boton-flotante:hover {
-    opacity: 1;                 /* Se hace opaco al pasar el mouse */
-    transform: scale(1.1);      /* Efecto zoom sutil */
-  }
-
-  .boton-flotante.oculto {
-    opacity: 0;
-    transform: scale(0);
-    pointer-events: none;       /* No se puede clicar mientras desaparece */
-    transition: opacity 0.5s, transform 0.5s;
-  }
-
-/* Botón Motores: mismo estilo, pero MÁS ARRIBA que Tiempos */
-.boton-flotante-Motores{
-  position: fixed;
-  right: 20px;
-  bottom: 80px;              /* 👈 más arriba que el de tiempos (20px) */
-  background-color: #3f51b5; /* opcional, para diferenciar */
-  color: white;
-  padding: 15px 20px;
-  border-radius: 50px;
-  text-decoration: none;
-  font-weight: bold;
-  font-size: 16px;
-  opacity: 0.7;
-  transition: opacity 0.3s, transform 0.3s;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-  z-index: 1000;
-}
-
-.boton-flotante-Motores:hover{
-  opacity: 1;
-  transform: scale(1.1);
-}
-
-/* si también querés poder ocultarlo con una clase */
-.boton-flotante-Motores.oculto{
-  opacity: 0;
-  transform: scale(0);
-  pointer-events: none;
-  transition: opacity 0.5s, transform 0.5s;
-}
+  /* Botones flotantes removidos en favor de la barra de navegación superior */
 
 
 /* =========================================================
@@ -436,7 +390,7 @@ tr:hover {
   background: var(--primary);
   color: #ffffff;
   border-color: var(--primary);
-  box-shadow: 0 2px 6px rgba(134, 0, 98, 0.25);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
 }
 
 .date-control-box {
@@ -487,7 +441,7 @@ tr:hover {
 
 .date-picker-input:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(134, 0, 98, 0.15);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.08);
 }
 
 .btn-primary-action {
@@ -1412,10 +1366,10 @@ body[data-page="dashboard"] .page-nav a[aria-current="page"] {
 .range-info-banner { background: #fff5eb; border-left-color: #f78c2a; color: #79420d; }
 .range-info-banner.warning { background: #fff5eb; border-left-color: #f78c2a; color: #79420d; }
 .range-chart-bar.in-range,
-.production-chart-bar.wet { background: linear-gradient(90deg, #860062, #b45a9e); }
-.range-chart-bar.out-range { background: linear-gradient(90deg, #f78c2a, #ffc27f); }
-.production-chart-bar.humid { background: linear-gradient(90deg, #a13b84, #d9a0ca); }
-.production-chart-bar.pre-dry { background: linear-gradient(90deg, #f78c2a, #ffd1a5); }
+.production-chart-bar.wet { background: #860062; }
+.range-chart-bar.out-range { background: #f78c2a; }
+.production-chart-bar.humid { background: #9d3179; }
+.production-chart-bar.pre-dry { background: #e67e22; }
 .chart-dot.in-range,
 .chart-dot.wet { background: #860062; }
 .chart-dot.out-range,

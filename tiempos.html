@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Analisis de tiempos Secado Mecánico</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
  <style>
@@ -18,7 +18,7 @@
 
 body {
   font-family: 'Segoe UI', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: linear-gradient(135deg, #f2f2f2 0%, #e6e6e6 100%);
+  background: #f8fafc;
   color: #333;
   padding: 16px;
   line-height: 1.5;
@@ -34,7 +34,7 @@ body {
   padding: 16px;
   background: #ffffff;
   border-radius: 16px;
-  box-shadow: 0 6px 18px rgba(134, 0, 99, 0.12);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08); border: 1px solid #e2e8f0;
 }
 
 .header h1 {
@@ -75,7 +75,7 @@ body {
   left: 0;
   height: 4px;
   width: 100%;
-  background: linear-gradient(to right, #860062, #f78c2a);
+  background: #860062;
 }
 
 /* ===============================
@@ -107,24 +107,28 @@ body {
 
 /* === Primeras 3 tarjetas (marca) === */
 .card:nth-child(1) {
-  background: linear-gradient(135deg, #860062, #b34a8d);
-  color: #fff;
+  background: #ffffff;
+  border-top: 4px solid #860062;
+  color: #111827;
 }
 
 .card:nth-child(2) {
-  background: linear-gradient(135deg, #f78c2a, #ffc085);
-  color: #fff;
+  background: #ffffff;
+  border-top: 4px solid #f78c2a;
+  color: #111827;
 }
 
 .card:nth-child(3) {
-  background: linear-gradient(135deg, #860062, #b45a9e);
-  color: #fff;
+  background: #ffffff;
+  border-top: 4px solid #860062;
+  color: #111827;
 }
 
 /* === Resto de tarjetas === */
 .card:nth-child(n+4) {
-  background: linear-gradient(135deg, #ffffff, #f4f4f4);
-  color: #333;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #111827;
 }
 
 .card {
@@ -185,7 +189,7 @@ body {
    TARJETA DESTACADA DISCRETA
 ================================ */
 .card.destacada-vertical {
-  background: linear-gradient(135deg, #ffffff, #f4f4f4);
+  background: #ffffff;
   border-left: 5px solid #ffffff; /* Azul corporativo */
   box-shadow: 0 6px 16px rgba(255, 255, 255, 0.18);
 }
@@ -204,7 +208,7 @@ body {
 /* Hover suave (igual a cards normales pero un poco más elegante) */
 .card.destacada-vertical:hover {
   transform: translateY(-3px);
-  box-shadow: 0 10px 22px rgba(55, 53, 192, 0.25);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 
@@ -215,7 +219,7 @@ body {
   padding: 10px 16px;
   border-radius: 10px;
   border: none;
-  background: linear-gradient(to right, #860062, #f78c2a);
+  background: #860062;
   color: #fff;
   cursor: pointer;
   font-size: 0.9rem;
@@ -223,7 +227,7 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
-  box-shadow: 0 4px 10px rgba(134, 0, 99, 0.35);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .toggle-btn:active {
@@ -256,7 +260,7 @@ select {
 select:focus {
   outline: none;
   border-color: #f78c2a;
-  box-shadow: 0 0 0 3px rgba(0, 165, 181, 0.25);
+  outline: 2px solid #860062; outline-offset: 2px;
 }
 
 /* ===============================
@@ -310,7 +314,16 @@ html { scroll-behavior: smooth; }
 .header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px 16px; margin:0 -16px 18px; padding:8px 16px; border-radius:0 0 14px 14px; box-shadow:0 5px 18px rgba(53,38,56,.10); }
 .header h1 { font-size:1.15rem; }
 .header nav { margin-top:0 !important; }
-@media (max-width:700px) { .header { justify-content:center; } .header nav { width:100%; } .header h1 { justify-content:center; font-size:1rem; } }</style>
+@media (max-width:700px) { .header { justify-content:center; } .header nav { width:100%; } .header h1 { justify-content:center; font-size:1rem; } }
+:focus-visible {
+  outline: 2px solid #860062;
+  outline-offset: 2px;
+}
+button:focus-visible, select:focus-visible, a:focus-visible {
+  outline: 2px solid #860062;
+  outline-offset: 2px;
+}
+</style>
 
 </head>
 <body>
@@ -366,56 +379,7 @@ html { scroll-behavior: smooth; }
     </div>
     <div class="cards" id="cards-guardiolas" style="display:none;"></div>
   </div>
-<!-- BOTÓN FLOTANTE -->
-<a href="index.html" id="boton-flotante" class="boton-flotante">🏠 Inicio</a>
-
-<style>
-/* Estilo del botón flotante */
-.boton-flotante {
-  position: fixed;
-  bottom: 20px;               /* Distancia desde abajo */
-  right: 20px;                /* Distancia desde la derecha */
-  background-color: #860062;  /* Color azul */
-  color: white;
-  padding: 15px 20px;
-  border-radius: 50px;
-  text-decoration: none;
-  font-weight: bold;
-  font-size: 16px;
-  opacity: 0.7;               /* Transparencia inicial */
-  transition: opacity 0.3s, transform 0.3s;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-  z-index: 1000;
-}
-
-.boton-flotante:hover {
-  opacity: 1;                 /* Opaco al pasar el mouse */
-  transform: scale(1.1);      /* Zoom sutil */
-}
-
-.boton-flotante.oculto {
-  opacity: 0;
-  transform: scale(0);
-  pointer-events: none;       /* No se puede clicar mientras desaparece */
-  transition: opacity 0.5s, transform 0.5s;
-}
-</style>
-
-<script>
-// Función para animar y redirigir al pulsar
-const boton = document.getElementById('boton-flotante');
-
-boton.addEventListener('click', function(e) {
-  e.preventDefault();              // Evita que navegue de inmediato
-  boton.classList.add('oculto');   // Añade animación de salida
-
-  setTimeout(() => {
-    window.location.href = boton.href; // Redirige tras animación
-  }, 500); // Coincide con la transición CSS
-});
-</script>
-
-  <!-- MENSAJES DE ERROR -->
+<!-- MENSAJES DE ERROR -->
   <div id="error-container" style="display:none;"></div>
 
   <script>

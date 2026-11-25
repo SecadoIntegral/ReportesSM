@@ -472,6 +472,22 @@ function updateDashboardCharts({ updatePie = true, updateProduction = true } = {
     const inside = readValue("cantidad-qq-dentro");
     const outside = readValue("cantidad-qq-fuera");
     const pieTotal = inside + outside;
+    const insidePercentage = pieTotal > 0 ? inside / pieTotal * 100 : 0;
+    const outsidePercentage = pieTotal > 0 ? outside / pieTotal * 100 : 0;
+    const formatPercentage = value => value.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const placePieLabel = (id, startFraction, endFraction, percentage) => {
+      const label = document.getElementById(id);
+      if (!label) return;
+      const fraction = endFraction - startFraction;
+      if (fraction <= 0) { label.textContent = ""; return; }
+      const angle = (startFraction + fraction / 2) * Math.PI * 2 - Math.PI / 2;
+      const radius = 62;
+      label.setAttribute("x", String(110 + radius * Math.cos(angle)));
+      label.setAttribute("y", String(110 + radius * Math.sin(angle)));
+      label.textContent = `${formatPercentage(percentage)}%`;
+    };
+    placePieLabel("pie-label-inside", 0, pieTotal > 0 ? inside / pieTotal : 0, insidePercentage);
+    placePieLabel("pie-label-outside", pieTotal > 0 ? inside / pieTotal : 0, 1, outsidePercentage);
     const pieSlicePath = (startFraction, endFraction) => {
     const center = 110;
     const radius = 94;
@@ -496,7 +512,7 @@ function updateDashboardCharts({ updatePie = true, updateProduction = true } = {
     const pieTotalLabel = document.getElementById("humidity-pie-total");
     if (pieTotalLabel) pieTotalLabel.textContent = pieTotal.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const pie = document.getElementById("humidity-pie");
-    if (pie) pie.setAttribute("aria-label", `Dentro del rango de humedad: ${inside.toFixed(2)} QQ, humedad promedio ${readValue("humedad-promedio-dentro").toFixed(2)} por ciento. Fuera del rango: ${outside.toFixed(2)} QQ, humedad promedio ${readValue("humedad-promedio-fuera").toFixed(2)} por ciento.`);
+    if (pie) pie.setAttribute("aria-label", `Dentro del rango de humedad: ${inside.toFixed(2)} QQ (${formatPercentage(insidePercentage)} por ciento del total), humedad promedio ${readValue("humedad-promedio-dentro").toFixed(2)} por ciento. Fuera del rango: ${outside.toFixed(2)} QQ (${formatPercentage(outsidePercentage)} por ciento del total), humedad promedio ${readValue("humedad-promedio-fuera").toFixed(2)} por ciento.`);
   }
 
   if (updateProduction) {

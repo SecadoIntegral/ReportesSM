@@ -1584,6 +1584,7 @@ body[data-page="metrics"] .refresh-action { white-space: nowrap; }
 .humidity-pie-segment { stroke: #fff; stroke-width: 2; stroke-linejoin: round; }
 .humidity-pie-segment.inside { fill: #860062; }
 .humidity-pie-segment.outside { fill: #f78c2a; }
+.humidity-pie-label { fill: #fff; font-size: 14px; font-weight: 700; paint-order: stroke; stroke: rgba(0, 0, 0, .22); stroke-width: 2px; stroke-linejoin: round; pointer-events: none; }
 .humidity-pie-details { display: grid; gap: 12px; }
 .humidity-pie-total { display: flex; align-items: baseline; gap: 8px; }
 .humidity-pie-total strong { color: #352638; font-size: 24px; font-variant-numeric: tabular-nums; }

@@ -1252,7 +1252,7 @@ function loadByDate(fechaSeleccionada) {
       <tr><td>Tiempo Total</td><td>${formatHoras(valores.tiempoTotal)}</td><td><span class="status-badge warning">Normal</span></td></tr>
       <tr><td>Tiempo Muerto</td><td>${formatHoras(valores.tiempoMuerto)}</td><td><span class="status-badge success">Excelente</span></td></tr>
       <tr><td>QQs Mojado Recibidos en Planta</td><td>${valores.qqsMojadoEntrados}</td><td><span class="status-badge info">Entrados</span></td></tr>
-      <tr><td>QQs Mojado a Secadoras (OEE)</td><td>${valores.qqsMojadoIngresados}</td><td><span class="status-badge info">Registrado</span></td></tr>
+      <tr><td>QQs Enviados</td><td>${valores.qqsMojadoIngresados}</td><td><span class="status-badge info">Registrado</span></td></tr>
       <tr><td>QQs Oro Bruto Procesados</td><td>${valores.procesados}</td><td><span class="status-badge warning">Normal</span></td></tr>
       <tr><td>Rechazados</td><td>${valores.rechazados}</td><td><span class="status-badge success">Controlado</span></td></tr>
     `;
